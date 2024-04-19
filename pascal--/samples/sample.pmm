@@ -1,0 +1,27 @@
+program Example;
+const
+    Pi: double = 3.1415926;
+var
+    num1, num2: integer;
+    res, d: double;
+begin
+    num1 := 5;
+
+    // Это комментарий
+    (* Это тоже комментарий *)
+
+    // Pascal не чувствителен к регистру зарезервированных слов
+    Write("Введите четное целое число: ");
+    readln(num2);
+    write("Введите вещественное число: ");
+	readln(d);
+
+    if (b mod 2 = 0) then
+    begin
+        res := (num1 - num2 * 5 div 2) / (d * 2);
+        write("Результат = ");
+        writeln(res);
+    end
+    else
+        writeln("Неверный ввод");
+end.
