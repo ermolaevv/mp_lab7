@@ -59,29 +59,30 @@ protected:
     wpNode End;
 public:
     /// <summary>
-    /// Класс-итератор
+    /// Класс-итератор.
     /// </summary>
-    class Iterator{
-		std::shared_ptr<HierarchicalList> List;
-		friend class HierarchicalList<value_type>;
+    class Iterator {
+        HierarchicalList<TValue>& List;
 
-		/// <summary>
-		/// Текущий узел, на который указывает объект итератора
-		/// </summary>
-		spNode Node;
-	public:
-		/// <summary>
-		/// Конструктор копирования
-		/// </summary>
-		/// <param name="it">Другой итератор</param>
-		Iterator(const iterator& it);
+        /// <summary>
+        /// Текущий узел, на который указывает объект итератора.
+        /// </summary>
+        spNode Node;
+    public:
+        friend class HierarchicalList<value_type>;
 
-		/// <summary>
-		/// Конструктор-обыкновенный
-		/// </summary>
-		/// <param name="list">Указатель на список</param>
-		/// <param name="node">Опционально. Указатель на узел, с которого начнётся итерация</param>
-		Iterator(HierarchicalList& list, spNode node = spNode());
+        /// <summary>
+        /// Конструктор копирования.
+        /// </summary>
+        /// <param name="it">Другой итератор</param>
+        Iterator(const iterator& it);
+
+        /// <summary>
+        /// Конструктор-обыкновенный.
+        /// </summary>
+        /// <param name="list">Ссылка на список</param>
+        /// <param name="node">Указатель на узел, с которого начнётся итерация</param>
+        Iterator(HierarchicalList<TValue>& list, spNode node);
 
         /// <summary>
         /// Оператор присваивания.
@@ -91,74 +92,62 @@ public:
         Iterator& operator=(const Iterator& other);
 
         /// <summary>
-        /// При приобразовании к bool, фактически выполняется проверка на конец списка
+        /// При приобразовании к bool, фактически выполняется проверка на конец списка.
         /// </summary>
         operator bool();
 
-		/// <summary>
-		/// Spaceship-оператор, обеспечивающий трехсторонне сравнение
-		/// </summary>
-		/// <param name="other">Другой итератор</param>
-		/// <returns></returns>
-		auto operator<=>(const iterator& other) const;
-
         /// <summary>
-        /// Проверка равенства итераторов
+        /// Spaceship-оператор, обеспечивающий трехсторонне сравнение.
         /// </summary>
-        /// <param name="other">Другой итератор</param>
-        /// <returns>true, если итератеры равны, иначе false</returns>
-        bool operator==(const iterator& other) const;
+        friend auto operator<=>(const iterator& lhs, const iterator& rhs) noexcept
+        {
+            return rhs.Node <=> lhs.Node;
+        }
 
         /// <summary>
-        /// Префиксное смещение итератора вперед
+        /// Префиксное смещение итератора вперед.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator& operator++() const;
+        iterator& operator++();
 
         /// <summary>
-        /// Префиксное смещение итератора назад
+        /// Префиксное смещение итератора назад.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator& operator--() const;
+        iterator& operator--();
 
         /// <summary>
-        /// Постфиксное смещение итератора вперед
+        /// Постфиксное смещение итератора вперед.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator operator++(int) const;
+        iterator operator++(int);
 
         /// <summary>
-        /// Постфиксное смещение итератора назад
+        /// Постфиксное смещение итератора назад.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator operator--(int) const;
+        iterator operator--(int);
 
         /// <summary>
-        /// Происзвольное смещение итератора вперед
+        /// Происзвольное смещение итератора вперед.
         /// </summary>
         /// <param name="n">Величина смещения</param>
         /// <returns>Возвращает *this</returns>
-        iterator& operator+=(size_type n) const;
+        iterator& operator+=(size_type n);
 
         /// <summary>
-        /// Происзвольное смещение итератора назад
+        /// Происзвольное смещение итератора назад.
         /// </summary>
         /// <param name="n">Величина смещения</param>
         /// <returns>Возвращает *this</returns>
-        iterator& operator-=(size_type n) const;
+        iterator& operator-=(size_type n);
 
         /// <summary>
-        /// Разыменование итератора
+        /// Разыменование итератора.
         /// </summary>
         /// <returns>Ссылка на данные, на которые указывает итератор</returns>
         reference operator*();
-
-        /// <summary>
-        /// Константное разыменование итератора
-        /// </summary>
-        /// <returns>Ссылка на данные, на которые указывает итератор</returns>
-        const_reference operator*() const;
-	};
+    };
 
     /// <summary>
     /// Конструктор-обыкновенный.

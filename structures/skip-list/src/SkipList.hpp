@@ -16,7 +16,7 @@ template<class TValue>
 SkipList<TValue>::spNode SkipList<TValue>::Node::NextOnLevel(size_type level) const
 {
     if (level < Next.size() && !Next[level].expired()) { return Next[level].lock(); }
-    return spNode;
+    return spNode();
 }
 
 template<class TValue>
@@ -36,39 +36,21 @@ template<class TValue>
 SkipList<TValue>::Iterator::operator bool() { return Node != nullptr; }
 
 template<class TValue>
-auto SkipList<TValue>::Iterator::operator<=>(const iterator& other) const
+typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator++()
 {
-    return Node <=> other.Node;
-}
-
-template<class TValue>
-bool SkipList<TValue>::Iterator::operator==(const iterator& other) const
-{
-    return Node == other.Node;
-}
-
-template<class TValue>
-typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator++() 
-{
-    if (Node) {
-        auto lockedNode = Node.lock();
-        if (lockedNode) { Node = lockedNode->NextOnLevel(0); }
-    }
+    if (Node) { Node = Node->NextOnLevel(0); }
     return *this;
 }
 
 template<class TValue>
 typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator--()
 {
-    if (Node) {
-        auto lockedNode = Node.lock(); 
-        if (lockedNode) {  Node = lockedNode->PreviousOnLevel(0); }
-    }
+    if (Node) { Node = Node->PreviousOnLevel(0); }
     return *this;
 }
 
 template<class TValue>
-SkipList<TValue>::iterator SkipList<TValue>::Iterator::operator++(int) const
+SkipList<TValue>::iterator SkipList<TValue>::Iterator::operator++(int)
 {
     Iterator temp = *this;
     ++(*this);
@@ -76,31 +58,29 @@ SkipList<TValue>::iterator SkipList<TValue>::Iterator::operator++(int) const
 }
 
 template<class TValue>
-SkipList<TValue>::iterator SkipList<TValue>::Iterator::operator--(int) const
+SkipList<TValue>::iterator SkipList<TValue>::Iterator::operator--(int)
 {
     Iterator temp = *this;
-    --(*this);
+    --(*this);  
     return temp;
 }
 
 template<class TValue>
-typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator+=(size_type n) const
+typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator+=(size_type n)
 {
-    while (n-- && Node) {
-        auto lockedNode = Node.lock();
-        if (lockedNode) { Node = lockedNode->NextOnLevel(0); }
-        else { break; }
+    while (n > 0 && Node) {
+        Node = Node->NextOnLevel(0);
+        n--;
     }
     return *this;
 }
 
 template<class TValue>
-typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator-=(size_type n) const
+typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator-=(size_type n)
 {
-    while (n-- && Node) {
-        auto lockedNode = Node.lock();
-        if (lockedNode) { Node = lockedNode->PreviousOnLevel(0); }
-        else { break; }
+    while (n > 0 && Node) {
+        Node = Node->PreviousOnLevel(0);
+        n--;
     }
     return *this;
 }
@@ -111,14 +91,6 @@ SkipList<TValue>::reference SkipList<TValue>::Iterator::operator*()
     assert(Node.lock() != nullptr); 
     return Node.lock()->Value;
 }
-
-template<class TValue>
-SkipList<TValue>::const_reference SkipList<TValue>::Iterator::operator*() const
-{
-    // todo
-    return const_reference();
-}
-
 
 template<class TValue>
 SkipList<TValue>::SkipList(size_type MaxLevel, double Probability, pointer Arr, size_type ArrSize)
@@ -139,13 +111,13 @@ SkipList<TValue>& SkipList<TValue>::operator=(const SkipList& other)
 template<class TValue>
 SkipList<TValue>::iterator SkipList<TValue>::begin() const
 {
-    return iterator();
+    return iterator(const_cast<SkipList<TValue>&>(*this), this->Start);
 }
 
 template<class TValue>
 SkipList<TValue>::iterator SkipList<TValue>::end() const
 {
-    return iterator();
+    return iterator(const_cast<SkipList<TValue>&>(*this), this->End.lock());
 }
 
 template<class TValue>
@@ -157,13 +129,13 @@ SkipList<TValue>::iterator SkipList<TValue>::find(const reference value) const n
 template<class TValue>
 SkipList<TValue>::size_type SkipList<TValue>::size() const noexcept
 {
-    return size_type();
+    return length;
 }
 
 template<class TValue>
 bool SkipList<TValue>::empty() const noexcept
 {
-    return false;
+    return length == 0;
 }
 
 template<class TValue>

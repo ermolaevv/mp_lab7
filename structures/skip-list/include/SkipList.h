@@ -91,13 +91,14 @@ public:
     /// </summary>
     class Iterator{
         SkipList<TValue>& List;
-		friend class SkipList<value_type>;
 
 		/// <summary>
 		/// Текущий узел, на который указывает объект итератора.
 		/// </summary>
 		spNode Node;
 	public:
+		friend class SkipList<value_type>;
+
 		/// <summary>
 		/// Конструктор копирования.
 		/// </summary>
@@ -107,9 +108,9 @@ public:
 		/// <summary>
 		/// Конструктор-обыкновенный.
 		/// </summary>
-		/// <param name="list">Указатель на список</param>
-		/// <param name="node">Опционально. Указатель на узел, с которого начнётся итерация</param>
-		Iterator(SkipList<TValue>& list, spNode node = spNode());
+		/// <param name="list">Ссылка на список</param>
+		/// <param name="node">Указатель на узел, с которого начнётся итерация</param>
+		Iterator(SkipList<TValue>& list, spNode node);
 
         /// <summary>
         /// Оператор присваивания.
@@ -126,16 +127,10 @@ public:
 		/// <summary>
 		/// Spaceship-оператор, обеспечивающий трехсторонне сравнение.
 		/// </summary>
-		/// <param name="other">Другой итератор</param>
-		/// <returns></returns>
-		auto operator<=>(const iterator& other) const;
-
-        /// <summary>
-        /// Проверка равенства итераторов.
-        /// </summary>
-        /// <param name="other">Другой итератор</param>
-        /// <returns>true, если итератеры равны, иначе false</returns>
-        bool operator==(const iterator& other) const;
+        friend auto operator<=>(const iterator& lhs, const iterator& rhs) noexcept
+        {
+            return rhs.Node <=> lhs.Node;
+        }
 
         /// <summary>
         /// Префиксное смещение итератора вперед.
@@ -153,39 +148,33 @@ public:
         /// Постфиксное смещение итератора вперед.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator operator++(int) const;
+        iterator operator++(int);
 
         /// <summary>
         /// Постфиксное смещение итератора назад.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator operator--(int) const;
+        iterator operator--(int);
 
         /// <summary>
         /// Происзвольное смещение итератора вперед.
         /// </summary>
         /// <param name="n">Величина смещения</param>
         /// <returns>Возвращает *this</returns>
-        iterator& operator+=(size_type n) const;
+        iterator& operator+=(size_type n);
 
         /// <summary>
         /// Происзвольное смещение итератора назад.
         /// </summary>
         /// <param name="n">Величина смещения</param>
         /// <returns>Возвращает *this</returns>
-        iterator& operator-=(size_type n) const;
+        iterator& operator-=(size_type n);
 
         /// <summary>
         /// Разыменование итератора.
         /// </summary>
         /// <returns>Ссылка на данные, на которые указывает итератор</returns>
         reference operator*();
-
-        /// <summary>
-        /// Константное разыменование итератора.
-        /// </summary>
-        /// <returns>Ссылка на данные, на которые указывает итератор</returns>
-        const_reference operator*() const;
 	};
 
     /// <summary>
