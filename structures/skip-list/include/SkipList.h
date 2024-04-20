@@ -90,7 +90,7 @@ public:
     /// Класс-итератор.
     /// </summary>
     class Iterator{
-		std::shared_ptr<SkipList> List;
+        SkipList<TValue>& List;
 		friend class SkipList<value_type>;
 
 		/// <summary>
@@ -109,7 +109,7 @@ public:
 		/// </summary>
 		/// <param name="list">Указатель на список</param>
 		/// <param name="node">Опционально. Указатель на узел, с которого начнётся итерация</param>
-		Iterator(SkipList& list, spNode node = spNode());
+		Iterator(SkipList<TValue>& list, spNode node = spNode());
 
         /// <summary>
         /// Оператор присваивания.

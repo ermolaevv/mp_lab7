@@ -20,14 +20,10 @@ SkipList<TValue>::spNode SkipList<TValue>::Node::NextOnLevel(size_type level) co
 }
 
 template<class TValue>
-SkipList<TValue>::Iterator::Iterator(const iterator& it)
-{
-}
+SkipList<TValue>::Iterator::Iterator(const iterator& it): List(it.List), Node(it.Node) {}
 
 template<class TValue>
-SkipList<TValue>::Iterator::Iterator(SkipList& list, spNode node)
-{
-}
+SkipList<TValue>::Iterator::Iterator(SkipList<TValue>& list, spNode node): List(list), Node(node) {}
 
 template<class TValue>
 typename SkipList<TValue>::Iterator& SkipList<TValue>::Iterator::operator=(const Iterator& other)
