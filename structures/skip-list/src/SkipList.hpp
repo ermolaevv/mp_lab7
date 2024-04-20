@@ -1,19 +1,22 @@
 #include "SkipList.h"
 template<class TValue>
-SkipList<TValue>::Node::Node(const reference Value, size_type MaxLevel, spNode Previous)
+SkipList<TValue>::Node::Node(const reference Value, size_type MaxLevel, spNode Previous): Value(Value), Previous(Previous)
 {
+    Next.resize(MaxLevel);
 }
 
 template<class TValue>
 SkipList<TValue>::spNode SkipList<TValue>::Node::PreviousOnLevel(size_type level) const
 {
-    return spNode();
+    if (!Previous.expired()) { return Previous.lock(); }
+    return spNode;
 }
 
 template<class TValue>
 SkipList<TValue>::spNode SkipList<TValue>::Node::NextOnLevel(size_type level) const
 {
-    return spNode();
+    if (level < Next.size() && !Next[level].expired()) { return Next[level].lock(); }
+    return spNode;
 }
 
 template<class TValue>
