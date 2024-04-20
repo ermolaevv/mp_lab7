@@ -141,13 +141,13 @@ public:
         /// Префиксное смещение итератора вперед.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator& operator++() const;
+        iterator& operator++();
 
         /// <summary>
         /// Префиксное смещение итератора назад.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator& operator--() const;
+        iterator& operator--();
 
         /// <summary>
         /// Постфиксное смещение итератора вперед.

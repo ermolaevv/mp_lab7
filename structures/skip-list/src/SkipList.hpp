@@ -28,71 +28,94 @@ SkipList<TValue>::Iterator::Iterator(SkipList<TValue>& list, spNode node): List(
 template<class TValue>
 typename SkipList<TValue>::Iterator& SkipList<TValue>::Iterator::operator=(const Iterator& other)
 {
+    if (this != &other) { Node = other.Node; }
     return *this;
 }
 
 template<class TValue>
-SkipList<TValue>::Iterator::operator bool()
-{
-}
+SkipList<TValue>::Iterator::operator bool() { return Node != nullptr; }
 
 template<class TValue>
 auto SkipList<TValue>::Iterator::operator<=>(const iterator& other) const
 {
-    return;
+    return Node <=> other.Node;
 }
 
 template<class TValue>
 bool SkipList<TValue>::Iterator::operator==(const iterator& other) const
 {
-    return false;
+    return Node == other.Node;
 }
 
 template<class TValue>
-typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator++() const
+typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator++() 
 {
-    return iterator();
+    if (Node) {
+        auto lockedNode = Node.lock();
+        if (lockedNode) { Node = lockedNode->NextOnLevel(0); }
+    }
+    return *this;
 }
 
 template<class TValue>
-typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator--() const
+typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator--()
 {
-    return iterator();
+    if (Node) {
+        auto lockedNode = Node.lock(); 
+        if (lockedNode) {  Node = lockedNode->PreviousOnLevel(0); }
+    }
+    return *this;
 }
 
 template<class TValue>
 SkipList<TValue>::iterator SkipList<TValue>::Iterator::operator++(int) const
 {
-    return iterator();
+    Iterator temp = *this;
+    ++(*this);
+    return temp;
 }
 
 template<class TValue>
 SkipList<TValue>::iterator SkipList<TValue>::Iterator::operator--(int) const
 {
-    return iterator();
+    Iterator temp = *this;
+    --(*this);
+    return temp;
 }
 
 template<class TValue>
 typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator+=(size_type n) const
 {
-    return iterator();
+    while (n-- && Node) {
+        auto lockedNode = Node.lock();
+        if (lockedNode) { Node = lockedNode->NextOnLevel(0); }
+        else { break; }
+    }
+    return *this;
 }
 
 template<class TValue>
 typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator-=(size_type n) const
 {
-    return iterator();
+    while (n-- && Node) {
+        auto lockedNode = Node.lock();
+        if (lockedNode) { Node = lockedNode->PreviousOnLevel(0); }
+        else { break; }
+    }
+    return *this;
 }
 
 template<class TValue>
 SkipList<TValue>::reference SkipList<TValue>::Iterator::operator*()
 {
-    return reference();
+    assert(Node.lock() != nullptr); 
+    return Node.lock()->Value;
 }
 
 template<class TValue>
 SkipList<TValue>::const_reference SkipList<TValue>::Iterator::operator*() const
 {
+    // todo
     return const_reference();
 }
 
