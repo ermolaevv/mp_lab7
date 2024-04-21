@@ -184,7 +184,7 @@ void SkipList<TValue>::insert(const reference value) noexcept
     }
     int newNodeLevel = 0;
     while (newNodeLevel < MaxLevel && (rand() % 100) < (coinProbability * 100)) { newNodeLevel++; }
-    spNode newNode = std::make_shared<Node>(static_cast<TValue>(value), newNodeLevel);
+    spNode newNode = std::make_shared<Node>(value, newNodeLevel);
     for (int i = 0; i <= newNodeLevel; i++) {
         if (*update[i]) {
             newNode->Next[i] = (*update[i])->NextOnLevel(i);

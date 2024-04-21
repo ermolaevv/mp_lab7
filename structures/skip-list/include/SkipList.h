@@ -43,9 +43,8 @@ protected:
         /// </summary>
         std::vector<wpNode> Next;
 
-        Node() : Value(), Previous(), Next() {}
-
-        Node(const reference Value,size_type MaxLevel, spNode Previous = spNode());
+        Node() : Value(value_type()), Previous(wpNode()), Next(std::vector<wpNode>()){}
+        Node(const reference Value, size_type MaxLevel, spNode Previous = spNode());
 
         /// <summary>
         /// Получить предыдущий узел в списке.
