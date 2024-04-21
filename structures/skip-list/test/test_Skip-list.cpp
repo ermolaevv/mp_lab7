@@ -98,6 +98,17 @@ TEST(SkipListTest, CopyAssignmentOperator) {
     EXPECT_EQ(sl1.size(), sl2.size());
 }
 
+TEST(SkipListTest, Find) {
+    SkipList<int> sl1(3, 0.5);
+    int value = 3;
+    sl1.insert(value);
+    value = 2;
+    sl1.insert(value);
+    value = 1;
+    sl1.insert(value);
+    value = 2;
+    EXPECT_EQ(*sl1.find(value), 2);
+}
 
 
 

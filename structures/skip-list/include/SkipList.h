@@ -41,10 +41,12 @@ protected:
         /// Чем больше индекс, тем выше уровень.
         /// В конструторе выделяется память под все возможные уровни.
         /// </summary>
-        std::vector<wpNode> Next;
+        std::vector<spNode> Next;
 
-        Node() : Value(value_type()), Previous(wpNode()), Next(std::vector<wpNode>()){}
+        Node() : Value(value_type()), Previous(wpNode()), Next(std::vector<spNode>()){}
         Node(const reference Value, size_type MaxLevel, spNode Previous = spNode());
+
+        void SetNextNode(size_type level, spNode next = spNode());
 
         /// <summary>
         /// Получить предыдущий узел в списке.
@@ -132,6 +134,9 @@ public:
         {
             return rhs.Node <=> lhs.Node;
         }
+
+        bool operator==(const iterator& other) noexcept;
+        bool operator!=(const iterator& other) noexcept;
 
         /// <summary>
         /// Префиксное смещение итератора вперед.

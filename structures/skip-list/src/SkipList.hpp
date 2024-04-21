@@ -6,6 +6,13 @@ SkipList<TValue>::Node::Node(const reference Value, size_type MaxLevel, spNode P
 }
 
 template<class TValue>
+void SkipList<TValue>::Node::SetNextNode(size_type level, spNode next)
+{
+    if (level < Next.size())
+        Next[level] = next;
+}
+
+template<class TValue>
 SkipList<TValue>::spNode SkipList<TValue>::Node::PreviousOnLevel(size_type level) const
 {
     if (!Previous.expired()) { return Previous.lock(); }
@@ -15,7 +22,7 @@ SkipList<TValue>::spNode SkipList<TValue>::Node::PreviousOnLevel(size_type level
 template<class TValue>
 SkipList<TValue>::spNode SkipList<TValue>::Node::NextOnLevel(size_type level) const
 {
-    if (level < Next.size() && !Next[level].expired()) { return Next[level].lock(); }
+    if (level < Next.size()) { return Next[level]; }
     return spNode();
 }
 
@@ -34,6 +41,18 @@ typename SkipList<TValue>::Iterator& SkipList<TValue>::Iterator::operator=(const
 
 template<class TValue>
 SkipList<TValue>::Iterator::operator bool() { return Node != nullptr; }
+
+template<class TValue>
+inline bool SkipList<TValue>::Iterator::operator==(const iterator& other) noexcept
+{
+    return this->Node == other.Node;
+}
+
+template<class TValue>
+inline bool SkipList<TValue>::Iterator::operator!=(const iterator& other) noexcept
+{
+    return this->Node != other.Node;
+}
 
 template<class TValue>
 typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator++()
@@ -107,7 +126,9 @@ SkipList<TValue>::SkipList(const SkipList& other): MaxLevel(other.MaxLevel), coi
 {
     Start = std::make_shared<Node>(); 
     End = std::make_shared<Node>();
-    for (iterator it = other.begin(); it != other.end(); it++) { insert(*it); }
+    for (iterator it = other.begin(); it != other.end(); it++) {
+        insert(*it);
+    }
     
     /*catch (const std::exception& e) {
         std::cerr("Error of copy-constructor: ") << e.what() << std::endl;
@@ -143,13 +164,15 @@ SkipList<TValue>::iterator SkipList<TValue>::begin() const
 template<class TValue>
 SkipList<TValue>::iterator SkipList<TValue>::end() const
 {
-    return iterator(const_cast<SkipList<TValue>&>(*this), this->End.lock());
+    return iterator(const_cast<SkipList<TValue>&>(*this), this->End.lock()->NextOnLevel(0));
 }
 
 template<class TValue>
 SkipList<TValue>::iterator SkipList<TValue>::find(const reference value) const noexcept
 {
-    for (auto it = begin(); it != end(); it++) { if (*it == value) { return it;} }
+    for (auto it = begin(); it != end(); it++) {
+        if (*it == value) { return it;}
+    }
     return end();
 }
 
@@ -183,23 +206,40 @@ void SkipList<TValue>::clear() noexcept
 template<class TValue>
 void SkipList<TValue>::insert(const reference value) noexcept
 {
-    std::vector<spNode*> update(MaxLevel + 1, nullptr);
-    spNode current = Start;
-
-    for (int i = MaxLevel; i >= 0; i--) {
-        while (current->NextOnLevel(i) && current->NextOnLevel(i)->Value < value) { current = current->NextOnLevel(i); }
-        update[i] = &current;
+    if (length == 0) {
+        Start = std::make_shared<Node>(value, MaxLevel);
+        End = Start;
     }
+    else {
+        std::vector<spNode*> update(MaxLevel + 1, nullptr);
+        spNode current = Start;
 
-    int newNodeLevel = 0;
-    while (newNodeLevel < MaxLevel && (rand() % 100) < (coinProbability * 100)) { newNodeLevel++; }
+        for (int i = MaxLevel; i >= 0; i--) {
+            while (current->NextOnLevel(i) && current->NextOnLevel(i)->Value < value) { current = current->NextOnLevel(i); }
+            update[i] = &current;
+        }
 
-    if (newNodeLevel > MaxLevel) { MaxLevel = newNodeLevel; }
+        int newNodeLevel = 0;
+        while (newNodeLevel < MaxLevel - 1 && (rand() % 100) < (coinProbability * 100)) { newNodeLevel++; }
 
-    spNode newNode = std::make_shared<Node>(value, newNodeLevel);
-    for (int i = 0; i <= newNodeLevel; i++) {
-        newNode->NextOnLevel(i) = (*update[i])->NextOnLevel(i);
-        (*update[i])->NextOnLevel(i) = newNode;
+        if (current == Start && current->Value > value) {
+            auto tmp = Start;
+            Start = std::make_shared<Node>(value, MaxLevel);
+            for (int i = 0; i <= MaxLevel; i++) {
+                Start->SetNextNode(i, tmp);
+            }
+        }
+        else {
+            spNode newNode = std::make_shared<Node>(value, MaxLevel, current);
+            for (int i = 0; i <= newNodeLevel; i++) {
+                newNode->SetNextNode(i, (*update[i])->NextOnLevel(i));
+                (*update[i])->SetNextNode(i, newNode);
+            }
+
+            if (newNode->NextOnLevel() == spNode()) {
+                End = newNode;
+            }
+        }
     }
     length++;
 }
