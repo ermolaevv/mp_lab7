@@ -233,7 +233,7 @@ public:
     /// <summary>
     /// Очищает элементы списка.
     /// </summary>
-    void clear() const noexcept;
+    void clear() noexcept;
 
     /// <summary>
     /// Вставить новый элемент в список.

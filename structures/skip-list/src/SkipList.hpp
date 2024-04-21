@@ -88,9 +88,8 @@ typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator-=(size
 template<class TValue>
 SkipList<TValue>::reference SkipList<TValue>::Iterator::operator*()
 {
-    auto lockedNode = Node.lock(); 
-    assert(lockedNode != nullptr); 
-    return lockedNode->Value;
+    assert(Node != nullptr); 
+    return Node->Value; 
 }
 
 template<class TValue>
@@ -120,11 +119,17 @@ SkipList<TValue>::SkipList(const SkipList& other): MaxLevel(other.MaxLevel), coi
 template<class TValue>
 SkipList<TValue>& SkipList<TValue>::operator=(const SkipList& other)
 {
-    if (this != *other) {
-        clear();
-        MaxLevel = other.MaxLevel;
-        coinProbability = other.coinProbability;
-        for (iterator it = other.begin(); it != other.end(); it++) { insert(*it); }
+    if (this != &other) {
+        SkipList<TValue> temp(other.MaxLevel, other.coinProbability); 
+
+        for (iterator it = other.begin(); it != other.end(); ++it) {
+            temp.insert(*it); 
+        }
+        std::swap(MaxLevel, temp.MaxLevel);
+        std::swap(coinProbability, temp.coinProbability);
+        std::swap(Start, temp.Start);
+        std::swap(End, temp.End);
+        std::swap(length, temp.length);
     }
     return *this;
 }
@@ -161,63 +166,84 @@ bool SkipList<TValue>::empty() const noexcept
 }
 
 template<class TValue>
-void SkipList<TValue>::clear() const noexcept
+void SkipList<TValue>::clear() noexcept
 {
-    Node* current = Start;
+    spNode current = Start;
     while (current != nullptr) {
-        Node* temp = current->NextOnLevel(0).lock();
-        delete current;
-        current = temp;
+        spNode temp = current->NextOnLevel(0);
+        current.reset(); 
+        current = temp; 
     }
-    Start = End = nullptr;
+    Start.reset(); 
+    End.reset(); 
     length = 0;
 }
+
 
 template<class TValue>
 void SkipList<TValue>::insert(const reference value) noexcept
 {
-    std::vector<spNode*> update(MaxLevel+1, nullptr);
+    std::vector<spNode*> update(MaxLevel + 1, nullptr);
     spNode current = Start;
+
     for (int i = MaxLevel; i >= 0; i--) {
-        while (current && current->NextOnLevel(i) && current->NextOnLevel(i)->Value < value) {  current = current->NextOnLevel(i); }
+        while (current->NextOnLevel(i) && current->NextOnLevel(i)->Value < value) { current = current->NextOnLevel(i); }
         update[i] = &current;
     }
+
     int newNodeLevel = 0;
     while (newNodeLevel < MaxLevel && (rand() % 100) < (coinProbability * 100)) { newNodeLevel++; }
+
+    if (newNodeLevel > MaxLevel) { MaxLevel = newNodeLevel; }
+
     spNode newNode = std::make_shared<Node>(value, newNodeLevel);
     for (int i = 0; i <= newNodeLevel; i++) {
-        if (*update[i]) {
-            newNode->Next[i] = (*update[i])->NextOnLevel(i);
-            (*update[i])->Next[i] = newNode;
-        }
-        else {
-            newNode->Next[i] = Start;
-        }
-    }
-    if (!Start || Start->Value > value) {
-        Start = newNode;
+        newNode->NextOnLevel(i) = (*update[i])->NextOnLevel(i);
+        (*update[i])->NextOnLevel(i) = newNode;
     }
     length++;
 }
+
+
 
 template<class TValue>
 void SkipList<TValue>::remove(const reference value) noexcept
 {
     std::vector<spNode*> update(MaxLevel + 1, nullptr);
     spNode current = Start;
+
     for (int i = MaxLevel; i >= 0; i--) {
-        while (current && current->NextOnLevel(i) && current->NextOnLevel(i)->Value < value) { current = current->NextOnLevel(i); }
+        while (current->NextOnLevel(i) && current->NextOnLevel(i)->Value < value) { current = current->NextOnLevel(i); }
         update[i] = &current;
     }
-    current = current->NextOnLevel(0); 
+
+    current = current->NextOnLevel(0);
     if (current && current->Value == value) {
+        std::cout << "Found element to remove: " << current->Value << std::endl;
+
         for (int i = 0; i <= MaxLevel; i++) {
-            if (update[i] && (*update[i])->NextOnLevel(i) == current) { (*update[i])->NextOnLevel(i) = current->NextOnLevel(i); }
+            if (*update[i] && (*update[i])->NextOnLevel(i) == current) {
+                std::cout << "Removing element from level " << i << std::endl;
+                (*update[i])->NextOnLevel(i) = current->NextOnLevel(i);
+            }
         }
-        if (Start == current) { Start = current->NextOnLevel(0); }
-        length--; 
+        if (Start == current) {
+            std::cout << "Updating Start pointer" << std::endl;
+            Start = current->NextOnLevel(0);
+        }
+
+        while (MaxLevel > 0 && !Start->NextOnLevel(MaxLevel - 1)) {
+            std::cout << "Decreasing MaxLevel to " << (MaxLevel - 1) << std::endl;
+            MaxLevel--;
+        }
     }
+    length--;
 }
+
+
+
+
+
 
 template<class TValue>
 std::ostream& operator<<(std::ostream& os, SkipList<TValue>& list)
