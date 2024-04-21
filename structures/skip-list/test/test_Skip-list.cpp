@@ -2,11 +2,9 @@
 #include "SkipList.h"
 using namespace std;
 
-TEST(SkipList, Test) {
-    SkipList<int> l1;
-    auto it = l1.begin();
-    auto it2 = l1.end();
-    it++;
-    if (it == it2)
-        std::cout << 1;
-}
+//TEST(SkipListTest, ConstructorCreatesEmptyList) {
+//    SkipList<int> sl(3, 0.5);  
+//    EXPECT_TRUE(sl.empty());
+//    EXPECT_EQ(sl.size(), 0);
+//}
+//

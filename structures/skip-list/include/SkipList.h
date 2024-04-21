@@ -43,6 +43,8 @@ protected:
         /// </summary>
         std::vector<wpNode> Next;
 
+        Node() : Value(), Previous(), Next() {}
+
         Node(const reference Value,size_type MaxLevel, spNode Previous = spNode());
 
         /// <summary>

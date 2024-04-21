@@ -94,25 +94,27 @@ SkipList<TValue>::reference SkipList<TValue>::Iterator::operator*()
 }
 
 template<class TValue>
-SkipList<TValue>::SkipList(size_type MaxLevel, double Probability, pointer Arr, size_type ArrSize): MaxLevel(MaxLevel), coinProbability(Probability),
-   Start(nullptr),End(nullptr), length(0)
+SkipList<TValue>::SkipList(size_type MaxLevel, double Probability, pointer Arr, size_type ArrSize): MaxLevel(MaxLevel), coinProbability(Probability), length(0)
 {
+    Start = std::make_shared<Node>(); 
+    End = std::make_shared<Node>();
     if (Arr != nullptr && ArrSize > 0) {
         for (size_type i = 0; i < ArrSize; i++) { insert(Arr[i]); }
     }
 }
 
 template<class TValue>
-SkipList<TValue>::SkipList(const SkipList& other): MaxLevel(other.MaxLevel), coinProbability(other.coinProbability), Start(nullptr), End(nullptr), length(0)
+SkipList<TValue>::SkipList(const SkipList& other): MaxLevel(other.MaxLevel), coinProbability(other.coinProbability), length(0)
 {
-    try {
-        for (iterator it = other.begin(); it != other.end(); it++) { insert(*it); }
-    }
-    catch (const std::exception& e) {
+    Start = std::make_shared<Node>(); 
+    End = std::make_shared<Node>();
+    for (iterator it = other.begin(); it != other.end(); it++) { insert(*it); }
+    
+    /*catch (const std::exception& e) {
         std::cerr("Error of copy-constructor: ") << e.what() << std::endl;
         clear();
         throw;
-    }
+    }*/
 }
 
 template<class TValue>
@@ -142,7 +144,7 @@ SkipList<TValue>::iterator SkipList<TValue>::end() const
 template<class TValue>
 SkipList<TValue>::iterator SkipList<TValue>::find(const reference value) const noexcept
 {
-    for (auto it = begin(); it != end(); it++{ if (*it == value) { return it;} }
+    for (auto it = begin(); it != end(); it++) { if (*it == value) { return it;} }
     return end();
 }
 
@@ -182,7 +184,7 @@ void SkipList<TValue>::insert(const reference value) noexcept
     }
     int newNodeLevel = 0;
     while (newNodeLevel < MaxLevel && (rand() % 100) < (coinProbability * 100)) { newNodeLevel++; }
-    spNode newNode = std::make_shared<Node>(value, newNodeLevel);
+    spNode newNode = std::make_shared<Node>(static_cast<TValue>(value), newNodeLevel);
     for (int i = 0; i <= newNodeLevel; i++) {
         if (*update[i]) {
             newNode->Next[i] = (*update[i])->NextOnLevel(i);
