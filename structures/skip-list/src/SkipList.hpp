@@ -88,23 +88,42 @@ typename SkipList<TValue>::iterator& SkipList<TValue>::Iterator::operator-=(size
 template<class TValue>
 SkipList<TValue>::reference SkipList<TValue>::Iterator::operator*()
 {
-    assert(Node.lock() != nullptr); 
-    return Node.lock()->Value;
+    auto lockedNode = Node.lock(); 
+    assert(lockedNode != nullptr); 
+    return lockedNode->Value;
 }
 
 template<class TValue>
-SkipList<TValue>::SkipList(size_type MaxLevel, double Probability, pointer Arr, size_type ArrSize)
+SkipList<TValue>::SkipList(size_type MaxLevel, double Probability, pointer Arr, size_type ArrSize): MaxLevel(MaxLevel), coinProbability(Probability),
+   Start(nullptr),End(nullptr), length(0)
 {
+    if (Arr != nullptr && ArrSize > 0) {
+        for (size_type i = 0; i < ArrSize; i++) { insert(Arr[i]); }
+    }
 }
 
 template<class TValue>
-SkipList<TValue>::SkipList(const SkipList& other)
+SkipList<TValue>::SkipList(const SkipList& other): MaxLevel(other.MaxLevel), coinProbability(other.coinProbability), Start(nullptr), End(nullptr), length(0)
 {
+    try {
+        for (iterator it = other.begin(); it != other.end(); it++) { insert(*it); }
+    }
+    catch (const std::exception& e) {
+        std::cerr("Error of copy-constructor: ") << e.what() << std::endl;
+        clear();
+        throw;
+    }
 }
 
 template<class TValue>
 SkipList<TValue>& SkipList<TValue>::operator=(const SkipList& other)
 {
+    if (this != *other) {
+        clear();
+        MaxLevel = other.MaxLevel;
+        coinProbability = other.coinProbability;
+        for (iterator it = other.begin(); it != other.end(); it++) { insert(*it); }
+    }
     return *this;
 }
 
@@ -123,7 +142,8 @@ SkipList<TValue>::iterator SkipList<TValue>::end() const
 template<class TValue>
 SkipList<TValue>::iterator SkipList<TValue>::find(const reference value) const noexcept
 {
-    return iterator();
+    for (auto it = begin(); it != end(); it++{ if (*it == value) { return it;} }
+    return end();
 }
 
 template<class TValue>
@@ -141,20 +161,65 @@ bool SkipList<TValue>::empty() const noexcept
 template<class TValue>
 void SkipList<TValue>::clear() const noexcept
 {
+    Node* current = Start;
+    while (current != nullptr) {
+        Node* temp = current->NextOnLevel(0).lock();
+        delete current;
+        current = temp;
+    }
+    Start = End = nullptr;
+    length = 0;
 }
 
 template<class TValue>
 void SkipList<TValue>::insert(const reference value) noexcept
 {
+    std::vector<spNode*> update(MaxLevel+1, nullptr);
+    spNode current = Start;
+    for (int i = MaxLevel; i >= 0; i--) {
+        while (current && current->NextOnLevel(i) && current->NextOnLevel(i)->Value < value) {  current = current->NextOnLevel(i); }
+        update[i] = &current;
+    }
+    int newNodeLevel = 0;
+    while (newNodeLevel < MaxLevel && (rand() % 100) < (coinProbability * 100)) { newNodeLevel++; }
+    spNode newNode = std::make_shared<Node>(value, newNodeLevel);
+    for (int i = 0; i <= newNodeLevel; i++) {
+        if (*update[i]) {
+            newNode->Next[i] = (*update[i])->NextOnLevel(i);
+            (*update[i])->Next[i] = newNode;
+        }
+        else {
+            newNode->Next[i] = Start;
+        }
+    }
+    if (!Start || Start->Value > value) {
+        Start = newNode;
+    }
+    length++;
 }
 
 template<class TValue>
 void SkipList<TValue>::remove(const reference value) noexcept
 {
+    std::vector<spNode*> update(MaxLevel + 1, nullptr);
+    spNode current = Start;
+    for (int i = MaxLevel; i >= 0; i--) {
+        while (current && current->NextOnLevel(i) && current->NextOnLevel(i)->Value < value) { current = current->NextOnLevel(i); }
+        update[i] = &current;
+    }
+    current = current->NextOnLevel(0); 
+    if (current && current->Value == value) {
+        for (int i = 0; i <= MaxLevel; i++) {
+            if (update[i] && (*update[i])->NextOnLevel(i) == current) { (*update[i])->NextOnLevel(i) = current->NextOnLevel(i); }
+        }
+        if (Start == current) { Start = current->NextOnLevel(0); }
+        length--; 
+    }
 }
 
 template<class TValue>
 std::ostream& operator<<(std::ostream& os, SkipList<TValue>& list)
 {
+    for (auto it = list.begin(); it != list.end(); it++) { os << *it << " "; }
     return os;
 }
