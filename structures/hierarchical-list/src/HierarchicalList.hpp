@@ -1,93 +1,69 @@
 #include "HierarchicalList.h"
 
 template<class TValue>
-HierarchicalList<TValue>::Node::Node(const reference Value, spNode Next, spNode Down)
-{
-}
-
-
-template<class TValue>
-HierarchicalList<TValue>::Iterator::Iterator(const iterator& it)
-{
-}
+HierarchicalList<TValue>::Node::Node(const reference Value, spNode Next, spNode Down):
+    Value(Value),
+    Next(Next),
+    Down(Down)
+{}
 
 template<class TValue>
-HierarchicalList<TValue>::Iterator::Iterator(HierarchicalList& list, spNode node)
-{
-}
+HierarchicalList<TValue>::Iterator::Iterator(const iterator& it):
+    List(it.List),
+    Node(it.Node)
+{}
+
+template<class TValue>
+HierarchicalList<TValue>::Iterator::Iterator(HierarchicalList& list, spNode node):
+    List(list),
+    Node(node)
+{}
 
 template<class TValue>
 typename HierarchicalList<TValue>::Iterator& HierarchicalList<TValue>::Iterator::operator=(const Iterator& other)
 {
+    if (this != &other) {
+        List = other.List;
+        Node = other.Node;
+    }
     return *this;
 }
 
+template<class TValue>
+HierarchicalList<TValue>::Iterator::operator bool() { return Node != nullptr; }
 
 template<class TValue>
-HierarchicalList<TValue>::Iterator::operator bool()
+typename HierarchicalList<TValue>::iterator& HierarchicalList<TValue>::Iterator::operator++() 
 {
-}
-
-
-template<class TValue>
-auto HierarchicalList<TValue>::Iterator::operator<=>(const iterator& other) const
-{
-    return;
+    if (Node) { Node = Node->Next.lock(); }
+    return *this;
 }
 
 template<class TValue>
-bool HierarchicalList<TValue>::Iterator::operator==(const iterator& other) const
+HierarchicalList<TValue>::iterator HierarchicalList<TValue>::Iterator::operator++(int) 
 {
-    return false;
+    Iterator temp = *this;
+    if (Node) { Node = Node->Next.lock(); }
+    return temp;
 }
 
 template<class TValue>
-typename HierarchicalList<TValue>::iterator& HierarchicalList<TValue>::Iterator::operator++() const
+typename HierarchicalList<TValue>::iterator& HierarchicalList<TValue>::Iterator::operator+=(size_type n)
 {
-    return iterator();
-}
-
-template<class TValue>
-typename HierarchicalList<TValue>::iterator& HierarchicalList<TValue>::Iterator::operator--() const
-{
-    return iterator();
-}
-
-template<class TValue>
-HierarchicalList<TValue>::iterator HierarchicalList<TValue>::Iterator::operator++(int) const
-{
-    return iterator();
-}
-
-template<class TValue>
-HierarchicalList<TValue>::iterator HierarchicalList<TValue>::Iterator::operator--(int) const
-{
-    return iterator();
-}
-
-template<class TValue>
-typename HierarchicalList<TValue>::iterator& HierarchicalList<TValue>::Iterator::operator+=(size_type n) const
-{
-    return iterator();
-}
-
-template<class TValue>
-typename HierarchicalList<TValue>::iterator& HierarchicalList<TValue>::Iterator::operator-=(size_type n) const
-{
-    return iterator();
+    for (size_type i = 0; i < n; ++i) {
+        if (Node) { Node = Node->Next.lock(); }
+        else { break; }
+    }
+    return *this;
 }
 
 template<class TValue>
 HierarchicalList<TValue>::reference HierarchicalList<TValue>::Iterator::operator*()
 {
-    return reference();
+    if (Node) { return Node->Value; }
+    else { throw std::runtime_error("Attempt to dereference end iterator"); }
 }
 
-template<class TValue>
-HierarchicalList<TValue>::const_reference HierarchicalList<TValue>::Iterator::operator*() const
-{
-    return const_reference();
-}
 
 template<class TValue>
 HierarchicalList<TValue>::HierarchicalList(pointer Arr, size_type ArrSize)

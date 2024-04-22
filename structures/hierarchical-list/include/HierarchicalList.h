@@ -8,7 +8,7 @@
 #include <compare>
 
 /// <summary>
-/// Список с пропусками
+/// Иерархический список
 /// </summary>
 template <class TValue>
 class HierarchicalList {
@@ -111,22 +111,10 @@ public:
         iterator& operator++();
 
         /// <summary>
-        /// Префиксное смещение итератора назад.
-        /// </summary>
-        /// <returns>Возвращает *this</returns>
-        iterator& operator--();
-
-        /// <summary>
         /// Постфиксное смещение итератора вперед.
         /// </summary>
         /// <returns>Возвращает *this</returns>
         iterator operator++(int);
-
-        /// <summary>
-        /// Постфиксное смещение итератора назад.
-        /// </summary>
-        /// <returns>Возвращает *this</returns>
-        iterator operator--(int);
 
         /// <summary>
         /// Происзвольное смещение итератора вперед.
@@ -134,13 +122,6 @@ public:
         /// <param name="n">Величина смещения</param>
         /// <returns>Возвращает *this</returns>
         iterator& operator+=(size_type n);
-
-        /// <summary>
-        /// Происзвольное смещение итератора назад.
-        /// </summary>
-        /// <param name="n">Величина смещения</param>
-        /// <returns>Возвращает *this</returns>
-        iterator& operator-=(size_type n);
 
         /// <summary>
         /// Разыменование итератора.
