@@ -98,6 +98,7 @@ TEST(SkipListTest, CopyAssignmentOperator) {
     EXPECT_EQ(sl1.size(), sl2.size());
 }
 
+
 TEST(SkipListTest, Find) {
     SkipList<int> sl1(3, 0.5);
     int value = 3;
@@ -111,4 +112,24 @@ TEST(SkipListTest, Find) {
 }
 
 
+TEST(SkipListIteratorTest, IterationThroughAllElements) {
+    SkipList<int> sl(3, 0.5);
+    std::vector<int> values = { 1, 2, 3, 4, 5 };
+    for (int value : values) { sl.insert(value); }
+    int count = 0;
+    for (auto it = sl.begin(); it != sl.end(); ++it) { count++; }
+    EXPECT_EQ(count, values.size());
+}
+
+
+TEST(SkipListIteratorTest, IteratorRetrievesElementsInAscendingOrder) {
+    SkipList<int> sl(3, 0.5);
+    std::vector<int> inserted_values = { 3, 1, 4, 2, 5 };
+    for (int value : inserted_values) { sl.insert(value); }
+    int last_value = std::numeric_limits<int>::min();
+    for (auto it = sl.begin(); it != sl.end(); ++it) {
+        EXPECT_GE(*it, last_value);
+        last_value = *it;
+    }
+}
 

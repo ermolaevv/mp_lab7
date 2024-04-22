@@ -16,7 +16,7 @@ template<class TValue>
 SkipList<TValue>::spNode SkipList<TValue>::Node::PreviousOnLevel(size_type level) const
 {
     if (!Previous.expired()) { return Previous.lock(); }
-    return spNode;
+    return spNode();
 }
 
 template<class TValue>
@@ -259,21 +259,21 @@ void SkipList<TValue>::remove(const reference value) noexcept
 
     current = current->NextOnLevel(0);
     if (current && current->Value == value) {
-        std::cout << "Found element to remove: " << current->Value << std::endl;
+        //std::cout << "Found element to remove: " << current->Value << std::endl;
 
         for (int i = 0; i <= MaxLevel; i++) {
             if (*update[i] && (*update[i])->NextOnLevel(i) == current) {
-                std::cout << "Removing element from level " << i << std::endl;
+                //std::cout << "Removing element from level " << i << std::endl;
                 (*update[i])->NextOnLevel(i) = current->NextOnLevel(i);
             }
         }
         if (Start == current) {
-            std::cout << "Updating Start pointer" << std::endl;
+            //std::cout << "Updating Start pointer" << std::endl;
             Start = current->NextOnLevel(0);
         }
 
         while (MaxLevel > 0 && !Start->NextOnLevel(MaxLevel - 1)) {
-            std::cout << "Decreasing MaxLevel to " << (MaxLevel - 1) << std::endl;
+            //std::cout << "Decreasing MaxLevel to " << (MaxLevel - 1) << std::endl;
             MaxLevel--;
         }
     }
