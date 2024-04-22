@@ -42,6 +42,7 @@ protected:
     };
 
 
+
     /// <summary>
     /// Длина списка
     /// </summary>
@@ -57,6 +58,23 @@ protected:
     /// (Узел, у которого нет узлов в полях Next и Down)
     /// </summary>
     wpNode End;
+
+
+    void insertAfter(spNode node, const reference value) noexcept {
+        if (!node) { throw std::invalid_argument("Node is null"); }
+        spNode newNode = std::make_shared<Node>(value, node->Next.lock());
+        node->Next = newNode;
+    }
+
+    void insertSublist(spNode node, const reference value) noexcept {
+        if (!node) { throw std::invalid_argument("Node is null"); }
+        if (!node->Down) { node->Down = std::make_shared<Node>(value); }
+        else {
+            spNode subNode = node->Down;
+            while (subNode->Next.lock()) { subNode = subNode->Next.lock(); }
+            subNode->Next = std::make_shared<Node>(value);
+        }
+    }
 public:
     /// <summary>
     /// Класс-итератор.
@@ -186,11 +204,26 @@ public:
     /// </summary>
     void clear() const noexcept;
 
-    /// <summary>
-    /// Вставить новый элемент в список
-    /// </summary>
-    /// <param name="value">Значение для элемента списка</param>
-    void insert(const reference value) noexcept;
+    void insertAfter(const iterator& it, const reference value) {
+        if (!it.Node) {
+            if (it == this->end()) { 
+                Start = std::make_shared<Node>(value);
+            }
+            else {
+                throw std::invalid_argument("Iterator is invalid");
+            }
+        }
+        else {
+            spNode newNode = std::make_shared<Node>(value, it.Node->Next.lock());
+            it.Node->Next = newNode;
+        }
+    }
+
+
+    void insertSublist(const iterator& it, const reference value) {
+        if (!it.Node) { throw std::invalid_argument("Iterator is invalid"); }
+        insertSublist(it.Node, value);
+    }
 
     /// <summary>
     /// Удалить элемент по значению.

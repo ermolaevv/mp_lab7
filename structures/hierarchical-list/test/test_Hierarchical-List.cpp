@@ -23,3 +23,17 @@ TEST(HierarchicalListTest, AssignmentOperator) {
 }
 
 
+TEST(HierarchicalListTest, InsertAfter) {
+    HierarchicalList<int> list;
+
+    list.insertAfter(list.begin(), 5); 
+
+    auto it = list.begin();
+    int value = 10;
+
+    list.insertAfter(it, value);
+
+    ++it;
+
+    ASSERT_EQ(*it, 10);
+}
