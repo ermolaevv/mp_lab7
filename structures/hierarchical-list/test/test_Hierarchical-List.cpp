@@ -142,6 +142,28 @@ TEST(HierarchicalListTest, RemoveElement) {
 
 }
 
+TEST(HierarchicalListTest, PrintListSimple) {
+    HierarchicalList<int> list;
+    std::stringstream ss;
+
+    int value1 = 1;
+    int value2 = 2;
+    int value3 = 3;
+    
+    // Заполнение списка
+    list.insertAtHorizon(value1);
+    list.insertAtHorizon(value2);
+    list.insertAtHorizon(value3);
+
+    // Ожидаемый вывод
+    std::string expectedOutput = "HierarchicalList: 3 2 1 ";
+
+    // Перенаправление вывода в stringstream
+    ss << list;
+
+    // Проверка на соответствие ожидаемому выводу
+    EXPECT_EQ(ss.str(), expectedOutput);
+}
 
 
 

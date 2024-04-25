@@ -239,8 +239,5 @@ HierarchicalList<TValue>::size_type HierarchicalList<TValue>::countByNode(spNode
     return ((node->Next) ? countByNode(node->Next) : 0) + ((node->Down) ? countByNode(node->Down) : 0) + 1;
 }
 
-template<class TValue>
-std::ostream& operator<<(std::ostream& os, HierarchicalList<TValue>& list) {
-    return os;
-}
+
 

@@ -210,7 +210,15 @@ public:
     /// <param name="os">Поток вывода</param>
     /// <param name="list">Экземпляр списка</param>
     /// <returns>Поток вывода</returns>
-    friend std::ostream& operator<<(std::ostream& os, HierarchicalList& list);
+    friend std::ostream& operator<<(std::ostream& os, HierarchicalList& list) {
+        typename HierarchicalList<TValue>::spNode current = list.Start;
+        os << "HierarchicalList: ";
+        while (current != nullptr) {
+            os << current->Value << " ";
+            current = current->Next;
+        }
+        return os;
+    };
 
 protected:
     spNode findNode(const reference value, spNode node) const noexcept;
