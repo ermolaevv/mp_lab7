@@ -34,8 +34,8 @@ public:
     struct Node {
         value_type Value;
 
-        wpNode Next;
-        wpNode Down;
+        spNode Next;
+        spNode Down;
 
         Node(const reference Value, spNode Next = spNode(), spNode Down = spNode());
     };
@@ -193,10 +193,9 @@ public:
     /// Вставить новый элемент в список
     /// </summary>
     /// <param name="value">Значение для элемента списка</param>
-    void insert(const reference value) noexcept;
+    void insertAtHorizon(const reference value, spNode parent = spNode()) noexcept;
 
-
-    void insertAtDepth(const reference value, spNode parent) noexcept;
+    void insertAtDepth(const reference value, spNode parent = spNode()) noexcept;
 
     /// <summary>
     /// Удалить элемент по значению.
@@ -212,6 +211,11 @@ public:
     /// <param name="list">Экземпляр списка</param>
     /// <returns>Поток вывода</returns>
     friend std::ostream& operator<<(std::ostream& os, HierarchicalList& list);
+
+protected:
+    spNode findNode(const reference value, spNode node) const noexcept;
+    spNode findPrev(const reference value, spNode node) const noexcept;
+    size_type countByNode(spNode node, size_type offset = 0) const noexcept;
 };
 
 #include "../src/HierarchicalList.hpp"

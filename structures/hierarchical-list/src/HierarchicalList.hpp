@@ -35,7 +35,7 @@ HierarchicalList<TValue>::Iterator::operator bool() { return Node != nullptr; }
 template<class TValue>
 typename HierarchicalList<TValue>::iterator& HierarchicalList<TValue>::Iterator::operator++() 
 {
-    if (Node) { Node = Node->Next.lock(); }
+    if (Node) { Node = Node->Next; }
     return *this;
 }
 
@@ -43,7 +43,7 @@ template<class TValue>
 HierarchicalList<TValue>::iterator HierarchicalList<TValue>::Iterator::operator++(int) 
 {
     Iterator temp = *this;
-    if (Node) { Node = Node->Next.lock(); }
+    if (Node) { Node = Node->Next; }
     return temp;
 }
 
@@ -51,7 +51,7 @@ template<class TValue>
 typename HierarchicalList<TValue>::iterator& HierarchicalList<TValue>::Iterator::operator+=(size_type n)
 {
     for (size_type i = 0; i < n; ++i) {
-        if (Node) { Node = Node->Next.lock(); }
+        if (Node) { Node = Node->Next; }
         else { break; }
     }
     return *this;
@@ -70,7 +70,7 @@ HierarchicalList<TValue>::HierarchicalList(pointer Arr, size_type ArrSize) : len
 {
     if (Arr) {
         for (size_type i = 0; i < ArrSize; ++i) {
-            insert(Arr[i]);
+            insertAtHorizon(Arr[i]);
         }
     }
 }
@@ -81,7 +81,7 @@ template<class TValue>
 HierarchicalList<TValue>::HierarchicalList(const HierarchicalList& other) : length(0), Start(nullptr), End()
 {
     for (iterator it = other.begin(); it != other.end(); ++it) {
-        insert(*it);
+        insertAtHorizon(*it);
     }
 }
 
@@ -92,20 +92,18 @@ HierarchicalList<TValue>& HierarchicalList<TValue>::operator=(const Hierarchical
 {
     if (this != &other) {
          clear();
-         for (iterator it = other.begin(); it != other.end(); ++it) { insert(*it); }
+         for (iterator it = other.begin(); it != other.end(); ++it) { insertAtHorizon(*it); }
     }
     return *this;
 }
 
 template<class TValue>
 typename HierarchicalList<TValue>::iterator HierarchicalList<TValue>::begin() const {
-    // хз, делал исходя из подхода как в списке с пропусками
     return Iterator(*const_cast<HierarchicalList<TValue>*>(this), Start);
 }
 
 template<class TValue>
 typename HierarchicalList<TValue>::iterator HierarchicalList<TValue>::end() const {
-    // аналогично begin
     return Iterator(*const_cast<HierarchicalList<TValue>*>(this), nullptr);
 }
 
@@ -114,15 +112,7 @@ typename HierarchicalList<TValue>::iterator HierarchicalList<TValue>::end() cons
 template<class TValue>
 HierarchicalList<TValue>::iterator HierarchicalList<TValue>::find(const reference value) const noexcept
 {
-    // не уверен
-    spNode current = Start;
-    while (current != nullptr) {
-        if (current->Value == value) {
-            return Iterator(*const_cast<HierarchicalList<TValue>*>(this), current);
-        }
-        current = current->Next.lock();
-    }
-    return Iterator(*const_cast<HierarchicalList<TValue>*>(this), nullptr);  
+    return Iterator(*const_cast<HierarchicalList<TValue>*>(this), findNode(value, Start));  
 }
 
 template<class TValue>
@@ -146,17 +136,24 @@ void HierarchicalList<TValue>::clear() noexcept
 }
 
 template<class TValue>
-void HierarchicalList<TValue>::insert(const reference value) noexcept
+void HierarchicalList<TValue>::insertAtHorizon(const reference value, spNode parent) noexcept
 {
-    // в начало (МОЖНО И ПО ДРУГОМУ)
     spNode newNode = std::make_shared<Node>(value);
-    if (!Start) {
-        Start = newNode;
-        End = Start;
+    if (!parent) {
+        if (!Start) {
+            Start = newNode;
+            End = Start;
+        }
+        else {
+            newNode->Next = Start;
+            Start = newNode;
+        }
     }
     else {
-        newNode->Next = Start;  
-        Start = newNode;
+        newNode->Next = parent;
+        parent = newNode;
+        if (parent == End.lock())
+            End = newNode;
     }
     ++length;
 }
@@ -164,15 +161,14 @@ void HierarchicalList<TValue>::insert(const reference value) noexcept
 template<class TValue>
 void HierarchicalList<TValue>::insertAtDepth(const reference value, spNode parent) noexcept
 {
-    // НЕ УВЕРЕНННННННННННННННННННННННННННННННННННННННННННННННННННННННННННННННННННННН
     spNode newNode = std::make_shared<Node>(value);
-    if (!parent) {  insert(value); }
+    if (!parent) {  insertAtHorizon(value); }
     else {
-        spNode child = parent->Down.lock(); 
+        spNode child = parent->Down; 
         if (!child) { parent->Down = newNode; }
         else {
-            while (child->Next.lock()) { child = child->Next.lock(); }
-            child->Next = newNode; 
+            parent->Down = newNode;
+            newNode->Down = child;
         }
     }
     ++length;
@@ -181,25 +177,66 @@ void HierarchicalList<TValue>::insertAtDepth(const reference value, spNode paren
 template<class TValue>
 void HierarchicalList<TValue>::remove(const reference value) noexcept
 {
-    // не понимаю где ошибка
-    spNode current = Start;
-    spNode previous = nullptr;
-
-    while (current != nullptr) {
-        if (current->Value == value) {
-            
-            if (!previous) {
-                Start = current->Next.lock();  
-            }
-            else {
-                previous->Next = current->Next;  
-            }
-            --length;  
-            return;  
-        }
-        previous = current;
-        current = current->Next.lock();
+    if (length == 1) {
+        Start = spNode();
+        End = Start;
+        length--;
     }
+    else {
+        spNode previous = findPrev(value, Start);
+        spNode current;
+
+        if (previous->Next && previous->Next->Value == value)
+            current = previous->Next;
+        if (previous->Down && previous->Down->Value == value)
+            current = previous->Down;
+
+        length -= ((current->Down) ? countByNode(current->Down) : 0) + 1;
+
+        previous->Next = current->Next;
+    }
+}
+
+template<class TValue>
+HierarchicalList<TValue>::spNode HierarchicalList<TValue>::findNode(const reference value, spNode node) const noexcept
+{
+    if (node->Value == value)
+        return node;
+
+    spNode node1 = spNode();
+    spNode node2 = spNode();
+
+    if (node->Next)
+        node1 = findNode(value, node->Next);
+    if (node->Down)
+        node2 = findNode(value, node->Down);
+
+    return (node1) ? node1 : node2;
+}
+
+template<class TValue>
+HierarchicalList<TValue>::spNode HierarchicalList<TValue>::findPrev(const reference value, spNode node) const noexcept
+{
+    if (node->Next && node->Next->Value == value)
+        return node;
+    if (node->Down && node->Down->Value == value)
+        return node;
+
+    spNode node1 = spNode();
+    spNode node2 = spNode();
+
+    if (node->Next)
+        node1 = findPrev(value, node->Next);
+    if (node->Down)
+        node2 = findPrev(value, node->Down);
+
+    return (node1) ? node1 : node2;
+}
+
+template<class TValue>
+HierarchicalList<TValue>::size_type HierarchicalList<TValue>::countByNode(spNode node, size_type offset) const noexcept
+{
+    return ((node->Next) ? countByNode(node->Next) : 0) + ((node->Down) ? countByNode(node->Down) : 0) + 1;
 }
 
 template<class TValue>
