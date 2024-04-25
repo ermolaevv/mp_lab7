@@ -24,7 +24,6 @@ public:
     using const_reference = const reference;
     using size_type = size_t;
 
-protected:
     struct Node;
     using spNode = std::shared_ptr<Node>;
     using wpNode = std::weak_ptr<Node>;
@@ -40,6 +39,8 @@ protected:
 
         Node(const reference Value, spNode Next = spNode(), spNode Down = spNode());
     };
+protected:
+    
 
 
     /// <summary>
@@ -128,6 +129,8 @@ public:
         /// </summary>
         /// <returns>Ссылка на данные, на которые указывает итератор</returns>
         reference operator*();
+
+        spNode getNode() const { return Node; }
     };
 
     /// <summary>
@@ -184,13 +187,16 @@ public:
     /// <summary>
     /// Очищает элементы вектора.
     /// </summary>
-    void clear() const noexcept;
+    void clear() noexcept;
 
     /// <summary>
     /// Вставить новый элемент в список
     /// </summary>
     /// <param name="value">Значение для элемента списка</param>
     void insert(const reference value) noexcept;
+
+
+    void insertAtDepth(const reference value, spNode parent) noexcept;
 
     /// <summary>
     /// Удалить элемент по значению.
