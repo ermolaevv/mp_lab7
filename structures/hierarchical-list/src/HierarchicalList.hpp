@@ -75,6 +75,8 @@ HierarchicalList<TValue>::HierarchicalList(pointer Arr, size_type ArrSize) : len
     }
 }
 
+
+
 template<class TValue>
 HierarchicalList<TValue>::HierarchicalList(const HierarchicalList& other) : length(0), Start(nullptr), End()
 {
@@ -82,6 +84,8 @@ HierarchicalList<TValue>::HierarchicalList(const HierarchicalList& other) : leng
         insert(*it);
     }
 }
+
+
 
 template<class TValue>
 HierarchicalList<TValue>& HierarchicalList<TValue>::operator=(const HierarchicalList& other)
@@ -104,6 +108,7 @@ typename HierarchicalList<TValue>::iterator HierarchicalList<TValue>::end() cons
     // аналогично begin
     return Iterator(*const_cast<HierarchicalList<TValue>*>(this), nullptr);
 }
+
 
 
 template<class TValue>
