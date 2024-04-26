@@ -68,6 +68,7 @@ public:
         /// Текущий узел, на который указывает объект итератора.
         /// </summary>
         spNode Node;
+        std::stack<spNode> stack;
     public:
         friend class HierarchicalList<value_type>;
 
@@ -130,96 +131,25 @@ public:
         reference operator*();
 
         spNode getNode() const { return Node; }
-    };
-
-    /// <summary>
-    /// Класс-итератор для обхода в глубину.
-    /// </summary>
-    class DepthIterator {
-        HierarchicalList<TValue>& List;
 
         /// <summary>
-        /// Стек узлов для обхода в глубину.
+        /// Метод для начала обхода по глубине.
         /// </summary>
-        std::vector<spNode> NodeStack;
-    public:
-        friend class HierarchicalList<value_type>;
+        void beginDepthFirstTraversal() { stack.push(Node); }
 
         /// <summary>
-        /// Конструктор копирования.
+        /// Метод для продолжения обхода по глубине.
         /// </summary>
-        DepthIterator(const DepthIterator& it) : List(it.List), NodeStack(it.NodeStack) {}
-
-        /// <summary>
-        /// Конструктор-обыкновенный.
-        /// </summary>
-        DepthIterator(HierarchicalList<TValue>& list, spNode node) : List(list) {
-            NodeStack.push_back(node);
-        }
-
-        /// <summary>
-        /// Оператор присваивания.
-        /// </summary>
-        DepthIterator& operator=(const DepthIterator& other) {
-            if (this != &other) {
-                List = other.List;
-                NodeStack = other.NodeStack;
-            }
-            return *this;
-        }
-
-        /// <summary>
-        /// При приобразовании к bool, фактически выполняется проверка на конец списка.
-        /// </summary>
-        operator bool() {
-            return !NodeStack.empty();
-
-        }
-
-        /// <summary>
-        /// Spaceship-оператор, обеспечивающий трехсторонне сравнение.
-        /// </summary>
-        friend auto operator<=>(const DepthIterator& lhs, const DepthIterator& rhs) noexcept
-        {
-            return rhs.NodeStack <=> lhs.NodeStack;
-        }
-
-        /// <summary>
-        /// Префиксное смещение итератора вперед.
-        /// </summary>
-        DepthIterator& operator++() {
-            if (!NodeStack.empty()) {
-                spNode node = NodeStack.back();
-                NodeStack.pop_back();
-                if (node->Down) {
-                    NodeStack.push_back(node->Down);
-                }
-                if (node->Next) {
-                    NodeStack.push_back(node->Next);
-                }
-            }
-            return *this;
-        }
-
-        /// <summary>
-        /// Постфиксное смещение итератора вперед.
-        /// </summary>
-        DepthIterator operator++(int) {
-            DepthIterator temp = *this;
-            ++(*this);
-            return temp;
-        }
-
-        /// <summary>
-        /// Разыменование итератора.
-        /// </summary>
-        reference operator*() {
-            assert(!NodeStack.empty());
-            return NodeStack.back()->Value;
+        bool nextDepthFirstTraversal() {
+            if (stack.empty()) { return false; }
+            Node = stack.top();
+            stack.pop();
+            for (auto& child : Node->children) { stack.push(child); }
+            return true;
         }
     };
 
-
+    
     /// <summary>
     /// Конструктор-обыкновенный.
     /// Arr будет добавлен в один верхний уровень.
