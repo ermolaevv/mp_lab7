@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <compare>
+#include <stack>
 
 /// <summary>
 /// Иерархический список
@@ -135,21 +136,24 @@ public:
         /// <summary>
         /// Метод для начала обхода по глубине.
         /// </summary>
-        void beginDepthFirstTraversal() { stack.push(Node); }
+        spNode Down() {
+            stack.push(Node);
+            return Node = Node->Down;
+        }
 
         /// <summary>
-        /// Метод для продолжения обхода по глубине.
+        /// 
         /// </summary>
-        bool nextDepthFirstTraversal() {
-            if (stack.empty()) { return false; }
+        /// <returns></returns>
+        spNode Up() {
+            if (stack.empty()) { return Node; }
             Node = stack.top();
             stack.pop();
-            for (auto& child : Node->children) { stack.push(child); }
-            return true;
+            return Node;
         }
     };
 
-    
+
     /// <summary>
     /// Конструктор-обыкновенный.
     /// Arr будет добавлен в один верхний уровень.
