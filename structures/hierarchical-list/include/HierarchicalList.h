@@ -69,6 +69,7 @@ public:
         /// Текущий узел, на который указывает объект итератора.
         /// </summary>
         spNode Node;
+        std::stack<spNode> stack;
     public:
         friend class HierarchicalList<value_type>;
 
