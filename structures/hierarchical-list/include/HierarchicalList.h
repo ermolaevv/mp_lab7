@@ -14,10 +14,12 @@ template <class TValue>
 class HierarchicalList {
 public:
     class Iterator;
+    class DepthIterator;
 
     // Определения типов для совместимости с STL.
     using value_type = TValue;
     using iterator = Iterator;
+    using depth_iterator = DepthIterator;
     using const_iterator = const Iterator;
     using pointer = value_type*;
     using reference = value_type&;
@@ -40,9 +42,6 @@ public:
         Node(const reference Value, spNode Next = spNode(), spNode Down = spNode());
     };
 protected:
-    
-
-
     /// <summary>
     /// Длина списка
     /// </summary>
@@ -132,6 +131,94 @@ public:
 
         spNode getNode() const { return Node; }
     };
+
+    /// <summary>
+    /// Класс-итератор для обхода в глубину.
+    /// </summary>
+    class DepthIterator {
+        HierarchicalList<TValue>& List;
+
+        /// <summary>
+        /// Стек узлов для обхода в глубину.
+        /// </summary>
+        std::vector<spNode> NodeStack;
+    public:
+        friend class HierarchicalList<value_type>;
+
+        /// <summary>
+        /// Конструктор копирования.
+        /// </summary>
+        DepthIterator(const DepthIterator& it) : List(it.List), NodeStack(it.NodeStack) {}
+
+        /// <summary>
+        /// Конструктор-обыкновенный.
+        /// </summary>
+        DepthIterator(HierarchicalList<TValue>& list, spNode node) : List(list) {
+            NodeStack.push_back(node);
+        }
+
+        /// <summary>
+        /// Оператор присваивания.
+        /// </summary>
+        DepthIterator& operator=(const DepthIterator& other) {
+            if (this != &other) {
+                List = other.List;
+                NodeStack = other.NodeStack;
+            }
+            return *this;
+        }
+
+        /// <summary>
+        /// При приобразовании к bool, фактически выполняется проверка на конец списка.
+        /// </summary>
+        operator bool() {
+            return !NodeStack.empty();
+
+        }
+
+        /// <summary>
+        /// Spaceship-оператор, обеспечивающий трехсторонне сравнение.
+        /// </summary>
+        friend auto operator<=>(const DepthIterator& lhs, const DepthIterator& rhs) noexcept
+        {
+            return rhs.NodeStack <=> lhs.NodeStack;
+        }
+
+        /// <summary>
+        /// Префиксное смещение итератора вперед.
+        /// </summary>
+        DepthIterator& operator++() {
+            if (!NodeStack.empty()) {
+                spNode node = NodeStack.back();
+                NodeStack.pop_back();
+                if (node->Down) {
+                    NodeStack.push_back(node->Down);
+                }
+                if (node->Next) {
+                    NodeStack.push_back(node->Next);
+                }
+            }
+            return *this;
+        }
+
+        /// <summary>
+        /// Постфиксное смещение итератора вперед.
+        /// </summary>
+        DepthIterator operator++(int) {
+            DepthIterator temp = *this;
+            ++(*this);
+            return temp;
+        }
+
+        /// <summary>
+        /// Разыменование итератора.
+        /// </summary>
+        reference operator*() {
+            assert(!NodeStack.empty());
+            return NodeStack.back()->Value;
+        }
+    };
+
 
     /// <summary>
     /// Конструктор-обыкновенный.
