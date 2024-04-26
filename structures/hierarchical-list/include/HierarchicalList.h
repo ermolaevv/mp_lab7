@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <compare>
+#include <stack>
 
 /// <summary>
 /// Иерархический список
@@ -130,9 +131,28 @@ public:
         reference operator*();
 
         spNode getNode() const { return Node; }
+
+        /// <summary>
+        /// Метод для начала обхода по глубине.
+        /// </summary>
+        spNode Down() {
+            stack.push(Node);
+            return Node = Node->Down;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        spNode Up() {
+            if (stack.empty()) { return Node; }
+            Node = stack.top();
+            stack.pop();
+            return Node;
+        }
     };
 
-    
+
     /// <summary>
     /// Конструктор-обыкновенный.
     /// Arr будет добавлен в один верхний уровень.

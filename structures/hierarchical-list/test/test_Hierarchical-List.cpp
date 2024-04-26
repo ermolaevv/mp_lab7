@@ -160,7 +160,43 @@ TEST(HierarchicalListTest, PrintListSimple) {
 }
 
 
+TEST(HierarchicalListTest, IterationInDepth) {
+    HierarchicalList<int> myList;
 
+    int value1 = 1;
+    int value2 = 2;
+    int value3 = 3;
 
+    myList.insertAtHorizon(value1);
+    myList.insertAtHorizon(value2);
+    myList.insertAtHorizon(value3);
+
+    auto it = myList.begin();
+    HierarchicalList<int>::spNode firstNode = it.getNode();
+    int value10 = 10;
+    myList.insertAtDepth(value10, firstNode);
+    int value20 = 20;
+    myList.insertAtDepth(value20, firstNode);
+    int value30 = 30;
+    myList.insertAtDepth(value30, firstNode);
+
+    ASSERT_EQ(myList.size(), 6);
+
+    it.Down();
+    EXPECT_EQ(*it, 30);
+    it.Down();
+    EXPECT_EQ(*it, 20);
+    it.Down();
+    EXPECT_EQ(*it, 10);
+    it.Up();
+    EXPECT_EQ(*it, 20);
+    it.Up();
+    EXPECT_EQ(*it, 30);
+    it.Up();
+    EXPECT_EQ(*it, 3);
+    it.Up();
+    EXPECT_EQ(*it, 3);
+
+}
 
 
