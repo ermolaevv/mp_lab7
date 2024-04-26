@@ -68,7 +68,6 @@ public:
         /// Текущий узел, на который указывает объект итератора.
         /// </summary>
         spNode Node;
-        std::stack<spNode> stack;
     public:
         friend class HierarchicalList<value_type>;
 
@@ -131,22 +130,6 @@ public:
         reference operator*();
 
         spNode getNode() const { return Node; }
-
-        /// <summary>
-        /// Метод для начала обхода по глубине.
-        /// </summary>
-        void beginDepthFirstTraversal() { stack.push(Node); }
-
-        /// <summary>
-        /// Метод для продолжения обхода по глубине.
-        /// </summary>
-        bool nextDepthFirstTraversal() {
-            if (stack.empty()) { return false; }
-            Node = stack.top();
-            stack.pop();
-            for (auto& child : Node->children) { stack.push(child); }
-            return true;
-        }
     };
 
     

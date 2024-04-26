@@ -76,7 +76,7 @@ public:
     /// Не портит кучу!
     /// </summary>
     /// <returns>Ссылка на максимальный элемент</returns>
-    reference getMax() const noexcept;
+    const typename DHeap<TValue>::value_type& getMax() const noexcept;
 
     /// <summary>
     /// Возвращает итератор произвольного доступа, указывающий на первый элемент в куче.
@@ -94,7 +94,7 @@ public:
     /// Возвращает итератор произвольного доступа, указывающий на найденный элемент в куче.
     /// </summary>
     /// <returns>Итератор произвольного доступа.</returns>
-    iterator find(const reference value) const noexcept;
+    const_iterator find(const reference value) const noexcept;
 
     /// <summary>
     /// Возвращает количество элементов в куче.
@@ -111,7 +111,7 @@ public:
     /// <summary>
     /// Очищает элементы кучи.
     /// </summary>
-    void clear() const noexcept;
+    void clear() noexcept;
 
     /// <summary>
     /// Вставить новый элемент в кучу.
