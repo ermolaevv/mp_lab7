@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <compare>
+#include <algorithm>
 
 /// <summary>
 /// Пирамида.

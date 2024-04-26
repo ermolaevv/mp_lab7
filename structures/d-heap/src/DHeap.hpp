@@ -23,13 +23,8 @@ DHeap<TValue>& DHeap<TValue>::operator=(const DHeap& other)
 template<class TValue>
 std::vector<typename DHeap<TValue>::value_type> DHeap<TValue>::toSortedVector() const noexcept
 {
-    DHeap<TValue> copy(*this);
-    std::vector<value_type> sortedVector;
-    while (!copy.empty()) {
-        sortedVector.push_back(copy.getMax());
-        int value = 0;
-        copy.remove(value);
-    }
+    std::vector<value_type> sortedVector = Data;
+    std::sort(sortedVector.begin(), sortedVector.end(), std::greater<TValue>());
     return sortedVector;
 }
 
@@ -68,7 +63,17 @@ void DHeap<TValue>::insert(const reference value) noexcept
 template<class TValue>
 void DHeap<TValue>::remove(const reference value) noexcept
 {
-    //
+    auto it = std::find(Data.begin(), Data.end(), value);
+    if (it != Data.end()) {
+        size_type index = std::distance(Data.begin(), it);
+        std::swap(Data[index], Data.back());
+        Data.pop_back();
+        if (!Data.empty() && index < Data.size()) {
+            size_type parent = (index - 1) / DescendantCount;
+            if (Data[index] > Data[parent]) { surfacing(index); }
+            else { diving(index); }
+        }
+    }
 }
 
 template<class TValue>

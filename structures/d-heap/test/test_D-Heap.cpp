@@ -39,21 +39,21 @@ TEST(DHeapTest, Insert) {
     EXPECT_EQ(heap.getMax(), 1);
 }
 
-//TEST(DHeapTest, Remove) {
-//    int arr[] = { 1, 2, 3, 4, 5 };
-//    DHeap<int> heap(2, arr, 5);
-//    int value = 1;
-//    heap.remove(value);
-//    EXPECT_EQ(heap.size(), 4);
-//    EXPECT_EQ(heap.getMax(), 4);
-//}
+TEST(DHeapTest, Remove) {
+    int arr[] = { 1, 2, 3, 4, 5 };
+    DHeap<int> heap(2, arr, 5);
+    int value = 1;
+    heap.remove(value);
+    EXPECT_EQ(heap.size(), 4);
+    EXPECT_EQ(heap.getMax(), 5);
+}
 
-//TEST(DHeapTest, ToSortedVector) {
-//    int arr[] = { 1, 2, 3, 4, 5 };
-//    DHeap<int> heap(2, arr, 5);
-//    std::vector<int> sortedVector = heap.toSortedVector();
-//    EXPECT_EQ(sortedVector, std::vector<int>({ 5, 4, 3, 2, 1 }));
-//}
+TEST(DHeapTest, ToSortedVector) {
+    int arr[] = { 1, 2, 3, 4, 5 };
+    DHeap<int> heap(2, arr, 5);
+    std::vector<int> sortedVector = heap.toSortedVector();
+    EXPECT_EQ(sortedVector, std::vector<int>({ 5, 4, 3, 2, 1 }));
+}
 
 TEST(DHeapTest, Find) {
     int arr[] = { 1, 2, 3, 4, 5 };
