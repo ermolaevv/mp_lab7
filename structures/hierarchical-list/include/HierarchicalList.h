@@ -42,6 +42,8 @@ public:
 
         Node(const reference Value, spNode Next = spNode(), spNode Down = spNode());
     };
+
+    spNode getStart() const { return Start; }
 protected:
     /// <summary>
     /// Длина списка
@@ -241,7 +243,7 @@ public:
         return os;
     };
 
-protected:
+public:
     spNode findNode(const reference value, spNode node) const noexcept;
     spNode findPrev(const reference value, spNode node) const noexcept;
     size_type countByNode(spNode node, size_type offset = 0) const noexcept;
