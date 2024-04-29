@@ -56,6 +56,26 @@ TEST(HierarchicalListTest, InsertionOnLevel) {
     }
 }
 
+TEST(HierarchicalListTest, InsertionOnLevel2) {
+    HierarchicalList<int> myList;
+    int value1 = 1;
+    int value2 = 2;
+    int value3 = 3;
+    myList.insertAtHorizon(value1);
+    auto it = myList.begin();
+    myList.insertAtHorizon(value2, it.getNode());
+    it++;
+    myList.insertAtHorizon(value3, it.getNode());
+
+    ASSERT_EQ(myList.size(), 3);
+
+    int expectedValues[] = { 1, 2, 3 };
+    size_t index = 0;
+    for (auto it = myList.begin(); it != myList.end(); ++it) {
+        EXPECT_EQ(*it, expectedValues[index++]);
+    }
+}
+
 TEST(HierarchicalListTest, InsertionAtDepth) {
     HierarchicalList<int> myList;
 
