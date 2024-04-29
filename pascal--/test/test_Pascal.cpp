@@ -10,10 +10,7 @@ TEST(Pascal, Test) {
 }
 
 TEST(Pascal, ParseSampleFile) {
-    string filePath = "F:\\repos\\mp-lab7\\mp_lab7\\pascal--\\samples\\sample.pmm";
-
-    ifstream file(filePath);
-
+    ifstream file("../../../pascal--/samples/sample.pmm");
     stringstream buffer;
     buffer << file.rdbuf();
     string content = buffer.str();
