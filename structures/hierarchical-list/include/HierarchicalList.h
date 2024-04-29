@@ -241,7 +241,6 @@ public:
         }
         return os;
     };
-
 protected:
     spNode findNode(const reference value, spNode node) const noexcept;
     spNode findPrev(const reference value, spNode node) const noexcept;
