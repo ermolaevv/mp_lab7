@@ -150,8 +150,8 @@ void HierarchicalList<TValue>::insertAtHorizon(const reference value, spNode par
         }
     }
     else {
-        newNode->Next = parent;
-        parent = newNode;
+        newNode->Next = parent->Next;
+        parent->Next = newNode;
         if (parent == End.lock())
             End = newNode;
     }
