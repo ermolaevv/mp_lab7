@@ -242,7 +242,7 @@ public:
         return os;
     };
 
-public:
+protected:
     spNode findNode(const reference value, spNode node) const noexcept;
     spNode findPrev(const reference value, spNode node) const noexcept;
     size_type countByNode(spNode node, size_type offset = 0) const noexcept;

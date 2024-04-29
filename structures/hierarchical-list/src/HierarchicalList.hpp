@@ -159,7 +159,7 @@ void HierarchicalList<TValue>::insertAtHorizon(const reference value, spNode par
 }
 
 template<class TValue>
-void HierarchicalList<TValue>::insertAtDepth(reference value, spNode parent) noexcept
+void HierarchicalList<TValue>::insertAtDepth(const reference value, spNode parent) noexcept
 {
     spNode newNode = std::make_shared<Node>(value);
     if (!parent) {  insertAtHorizon(value); }

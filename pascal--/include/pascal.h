@@ -153,19 +153,19 @@ namespace Pascal {
                             }
                             else { // Значение по умолчанию
                                 if (type == "double") {
-                                    value = 0.0;
+                                    value = double();
                                 }
                                 else if (type == "integer") {
-                                    value = 0;
+                                    value = int();
                                 }
                                 else if (type == "boolean") {
-                                    value = false;
+                                    value = bool();
                                 }
                                 else if (type == "string") {
-                                    value = "";
+                                    value = std::string();
                                 }
                                 else if (type == "char") {
-                                    value = "";
+                                    value = char();
                                 }
                                 
                             }
