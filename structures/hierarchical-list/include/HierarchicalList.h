@@ -43,7 +43,6 @@ public:
         Node(const reference Value, spNode Next = spNode(), spNode Down = spNode());
     };
 
-    spNode getStart() const { return Start; }
 protected:
     /// <summary>
     /// Длина списка
