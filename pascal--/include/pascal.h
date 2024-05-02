@@ -2,6 +2,9 @@
 #define _PASCAL_
 
 #include <any>
+#include <sstream>
+#include <regex>
+#include <set>
 
 #include "HierarchicalList.h"
 #include "OrderedTable.h"
@@ -27,6 +30,11 @@ namespace Pascal {
         bool db = false;
         auto it = list.begin();
         while (std::getline(iss, line)) {
+            auto start = line.find_first_not_of(' ');
+            if (start == std::string::npos)
+                continue;
+
+            line = line.substr(start, line.size() - start);
             if (std::regex_search(line, match, commentRegex)) {
                 /*std::cout << "!Comment | " << line << std::endl;*/
                 continue;
@@ -60,6 +68,73 @@ namespace Pascal {
                 db = true;
             }
         }
+
+        auto insert = [](HierarchicalList<std::string>& list, auto& it2, auto& it3, std::string& buff) -> void {
+            if (buff == "")
+                return;
+
+            if (it3 == it2) {
+                /*std::cout << "Depth | " << buff << std::endl;*/
+                list.insertAtDepth(buff, it3.getNode());
+                it3.Down();
+            }
+            else {
+                /*std::cout << "Horizon | " << buff << std::endl;*/
+                list.insertAtHorizon(buff, it3.getNode());
+                it3++;
+            }
+        };
+
+        for (auto it = list.begin(); it != list.end(); it++) {
+            it.Down();
+            for (auto it2 = it; it2.getNode() != nullptr; it2++) {
+                std::string line = *it2;
+                std::string buff = "";
+                auto it3 = it2;
+
+                char ch;
+                for (size_t i = 0; i < line.size(); i++) {
+                    ch = line[i];
+                    if (ch == ' ') {
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                    }
+                    else if (ch == '"') {
+                        do {
+                            buff += line[i++];
+                        } while (line[i] != '"');
+                        buff += line[i];
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                    }
+                    else if (ch == '(' || ch == ')') {
+                        insert(list, it2, it3, buff);
+                        buff = ch;
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                    }
+                    else if (line[i] == ':' && line[i + 1] == '=') {
+                        insert(list, it2, it3, buff);
+                        buff = ":=";
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                        i++;
+                    }
+                    else if (ch == ':' || ch == ',' || ch == ';' || ch == '/' || ch == '+' || ch == '-' || ch == '*' || ch == '=') {
+                        insert(list, it2, it3, buff);
+                        buff = ch;
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                    }
+                    else {
+                        buff += ch;
+                    }
+                }
+            }
+            it.Up();
+
+        }
+
     }
 
     /// <summary>
