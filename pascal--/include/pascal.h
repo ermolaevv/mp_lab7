@@ -10,8 +10,19 @@
 #include <regex>
 #include <set>
 #include <vector>
+#include <unordered_set>
 
 namespace Pascal {
+        std::string trim(const std::string& str, const std::string& whitespace = " ")
+    {
+        const auto strBegin = str.find_first_not_of(whitespace);
+        if (strBegin == std::string::npos)
+            return ""; // no content
+        const auto strEnd = str.find_last_not_of(whitespace);
+        const auto strRange = strEnd - strBegin + 1;
+        return str.substr(strBegin, strRange);
+    }
+
     /// <summary>
     /// Парсит код программы в иерархический список
     /// Комментарии в коде парсить не надо
@@ -28,11 +39,9 @@ namespace Pascal {
         bool db = false;
         auto it = list.begin();
         while (std::getline(iss, line)) {
-            auto start = line.find_first_not_of(' ');
-            if (start == std::string::npos)
+            line = trim(line);
+            if (line == "")
                 continue;
-
-            line = line.substr(start, line.size() - start);
             if (std::regex_search(line, match, commentRegex)) {
                 /*std::cout << "!Comment | " << line << std::endl;*/
                 continue;
@@ -60,8 +69,10 @@ namespace Pascal {
                 }
                 if (db == true) {
                     /*std::cout << "Depth | " << line << std::endl;*/
-                    list.insertAtHorizon(line, it.getNode()->Down);
-                    /*it.Up();*/
+                    it.Down();
+                    while (it.getNode()->Next) it++;
+                    list.insertAtHorizon(line, it.getNode());
+                    it.Up();
                 }
                 db = true;
             }
@@ -71,7 +82,7 @@ namespace Pascal {
             if (buff == "")
                 return;
 
-            if (it3 == it2) {
+            if (*it3 == *it2) {
                 /*std::cout << "Depth | " << buff << std::endl;*/
                 list.insertAtDepth(buff, it3.getNode());
                 it3.Down();
@@ -133,27 +144,6 @@ namespace Pascal {
 
         }
 
-    }
-
-    std::vector<std::string> checkSintax(HierarchicalList<std::string>& list) {
-        std::vector<std::string> vector;
-        bool t = false;
-        for (auto it = list.begin(); it != list.end(); ++it) {
-            t = false;
-            vector.push_back(it.getNode()->Value);
-            it.Down();
-            while (it != list.end()) {
-                t = true;
-                vector.push_back(it.getNode()->Value);
-                //vector.push_back(it.getNode()->Value);
-                it++;
-            }
-            //if (t == true)
-                it.Up();
-            
-            
-        }
-        return vector;
     }
 
     /// <summary>
@@ -370,6 +360,86 @@ namespace Pascal {
             }
             it++;
         }
+    }
+
+    std::vector<std::string> listtovector(HierarchicalList<std::string>& list) { // Ачё?
+        std::vector<std::string> vector;
+        bool t = false;
+        for (auto it = list.begin(); it != list.end(); ++it) {
+            t = false;
+            vector.push_back(it.getNode()->Value);
+            it.Down();
+            while (it != list.end()) {
+                t = true;
+                vector.push_back(it.getNode()->Value);
+                //vector.push_back(it.getNode()->Value);
+                it++;
+            }
+            //if (t == true)
+            it.Up();
+
+
+        }
+        return vector;
+    }
+
+    bool checkSyntax(const std::vector<std::string>& lines) {
+        std::unordered_set<std::string> pascalKeywords = {
+"begin", "end", "program", "var", "procedure", "function", "if", "then", "else", "while", "do", "const", "var"
+        };
+
+        // Пустые строки. Надо ли оно нам?
+        /*for (const auto& line : lines) {
+            if (line.empty()) {
+                std::cerr << "SYNTAX ERROR | Empty line" << std::endl;
+                return false;
+            }
+        }*/
+
+        // Если нет слов из сета, то проверяем на ";"
+        for (const auto& line : lines) {
+            bool containsKeyword = false;
+            for (const auto& keyword : pascalKeywords) {
+                std::regex keywordPattern("\\b" + keyword + "\\b");
+                if (std::regex_search(line, keywordPattern) || line == "{" || line == "}") {
+                    containsKeyword = true;
+                    break; // Прерываем цикл, если найдено ключевое слово
+                }
+            }
+            if (!containsKeyword) {
+                if (!std::regex_search(line, std::regex(";"))) {
+                    std::cerr << "SYNTAX ERROR | Can't find ';' | " << line << std::endl;
+                    return false;
+                }
+            }
+        }
+
+        // Подсчёт скобок
+        //
+        int openBrackets = 0;
+        int openCurlyBraces = 0;
+        for (const auto& line : lines) {
+            for (char c : line) {
+                if (c == '{') {
+                    ++openCurlyBraces;
+                }
+                else if (c == '}') {
+                    --openCurlyBraces;
+                }
+                if (c == '(') {
+                    ++openBrackets;
+                }
+                else if (c == ')') {
+                    --openBrackets;
+                }
+            }
+            if (openCurlyBraces != 0 || openBrackets != 0) {
+                std::cerr << "SYNTAX ERROR | () or {} haven't pairs |" << line << std::endl;
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
