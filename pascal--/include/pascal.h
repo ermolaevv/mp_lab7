@@ -28,30 +28,35 @@ namespace Pascal {
         bool db = false;
         auto it = list.begin();
         while (std::getline(iss, line)) {
+            auto start = line.find_first_not_of(' ');
+            if (start == std::string::npos)
+                continue;
+
+            line = line.substr(start, line.size() - start);
             if (std::regex_search(line, match, commentRegex)) {
                 /*std::cout << "!Comment | " << line << std::endl;*/
                 continue;
             }
             if (std::regex_search(line, match, blockRegex) && tb == false) {
                 /*std::cout << "Horizont | " << line << std::endl;*/
-                    list.insertAtHorizon(line);
-                    tb = true;
-                    it = list.begin();
-                    db = false;
+                list.insertAtHorizon(line);
+                tb = true;
+                it = list.begin();
+                db = false;
             }
             else if (std::regex_search(line, match, blockRegex) && tb == true) {
                 /*std::cout << "Horizont | " << line << std::endl;*/
-                    list.insertAtHorizon(line, it.getNode());
-                    db = false;
-                    it++;
+                list.insertAtHorizon(line, it.getNode());
+                db = false;
+                it++;
             }
-            else if(line != ""){
+            else {
                 if (db == false) {
                     /*HierarchicalList<std::string>::spNode firstNode = it.getNode();*/
                     /*auto tit = firstNode;*/
                     /*std::cout << "Depth | " << line << std::endl;*/
                     list.insertAtDepth(line, it.getNode());
-                    it.Up(); //!!!!!!!!!!!!!!!!!!!
+                    it.Up();
                 }
                 if (db == true) {
                     /*std::cout << "Depth | " << line << std::endl;*/
@@ -61,6 +66,73 @@ namespace Pascal {
                 db = true;
             }
         }
+
+        auto insert = [](HierarchicalList<std::string>& list, auto& it2, auto& it3, std::string& buff) -> void {
+            if (buff == "")
+                return;
+
+            if (it3 == it2) {
+                /*std::cout << "Depth | " << buff << std::endl;*/
+                list.insertAtDepth(buff, it3.getNode());
+                it3.Down();
+            }
+            else {
+                /*std::cout << "Horizon | " << buff << std::endl;*/
+                list.insertAtHorizon(buff, it3.getNode());
+                it3++;
+            }
+        };
+
+        for (auto it = list.begin(); it != list.end(); it++) {
+            it.Down();
+            for (auto it2 = it; it2.getNode() != nullptr; it2++) {
+                std::string line = *it2;
+                std::string buff = "";
+                auto it3 = it2;
+
+                char ch;
+                for (size_t i = 0; i < line.size(); i++) {
+                    ch = line[i];
+                    if (ch == ' ') {
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                    }
+                    else if (ch == '"') {
+                        do {
+                            buff += line[i++];
+                        } while (line[i] != '"');
+                        buff += line[i];
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                    }
+                    else if (ch == '(' || ch == ')') {
+                        insert(list, it2, it3, buff);
+                        buff = ch;
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                    }
+                    else if (line[i] == ':' && line[i + 1] == '=') {
+                        insert(list, it2, it3, buff);
+                        buff = ":=";
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                        i++;
+                    }
+                    else if (ch == ':' || ch == ',' || ch == ';' || ch == '/' || ch == '+' || ch == '-' || ch == '*' || ch == '=') {
+                        insert(list, it2, it3, buff);
+                        buff = ch;
+                        insert(list, it2, it3, buff);
+                        buff = "";
+                    }
+                    else {
+                        buff += ch;
+                    }
+                }
+            }
+            it.Up();
+
+        }
+
     }
 
     std::vector<std::string> checkSintax(HierarchicalList<std::string>& list) {
