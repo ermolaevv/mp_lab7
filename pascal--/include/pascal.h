@@ -9,6 +9,7 @@
 #include <sstream>
 #include <regex>
 #include <set>
+#include <vector>
 
 namespace Pascal {
     /// <summary>
@@ -44,13 +45,13 @@ namespace Pascal {
                     db = false;
                     it++;
             }
-            else {
+            else if(line != ""){
                 if (db == false) {
                     /*HierarchicalList<std::string>::spNode firstNode = it.getNode();*/
                     /*auto tit = firstNode;*/
                     /*std::cout << "Depth | " << line << std::endl;*/
                     list.insertAtDepth(line, it.getNode());
-                    it.Up();
+                    it.Up(); //!!!!!!!!!!!!!!!!!!!
                 }
                 if (db == true) {
                     /*std::cout << "Depth | " << line << std::endl;*/
@@ -60,6 +61,27 @@ namespace Pascal {
                 db = true;
             }
         }
+    }
+
+    std::vector<std::string> checkSintax(HierarchicalList<std::string>& list) {
+        std::vector<std::string> vector;
+        bool t = false;
+        for (auto it = list.begin(); it != list.end(); ++it) {
+            t = false;
+            vector.push_back(it.getNode()->Value);
+            it.Down();
+            while (it != list.end()) {
+                t = true;
+                vector.push_back(it.getNode()->Value);
+                //vector.push_back(it.getNode()->Value);
+                it++;
+            }
+            //if (t == true)
+                it.Up();
+            
+            
+        }
+        return vector;
     }
 
     /// <summary>
