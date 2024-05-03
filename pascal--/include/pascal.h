@@ -9,11 +9,18 @@
 #include "HierarchicalList.h"
 #include "OrderedTable.h"
 #include "keywords.h"
-#include <sstream>
-#include <regex>
-#include <set>
 
 namespace Pascal {
+    std::string trim(const std::string& str, const std::string& whitespace = " ")
+    {
+        const auto strBegin = str.find_first_not_of(whitespace);
+        if (strBegin == std::string::npos)
+            return ""; // no content
+        const auto strEnd = str.find_last_not_of(whitespace);
+        const auto strRange = strEnd - strBegin + 1;
+        return str.substr(strBegin, strRange);
+    }
+
     /// <summary>
     /// Парсит код программы в иерархический список
     /// Комментарии в коде парсить не надо
@@ -30,11 +37,9 @@ namespace Pascal {
         bool db = false;
         auto it = list.begin();
         while (std::getline(iss, line)) {
-            auto start = line.find_first_not_of(' ');
-            if (start == std::string::npos)
+            line = trim(line);
+            if (line == "")
                 continue;
-
-            line = line.substr(start, line.size() - start);
             if (std::regex_search(line, match, commentRegex)) {
                 /*std::cout << "!Comment | " << line << std::endl;*/
                 continue;
@@ -62,8 +67,10 @@ namespace Pascal {
                 }
                 if (db == true) {
                     /*std::cout << "Depth | " << line << std::endl;*/
-                    list.insertAtHorizon(line, it.getNode()->Down);
-                    /*it.Up();*/
+                    it.Down();
+                    while (it.getNode()->Next) it++;
+                    list.insertAtHorizon(line, it.getNode());
+                    it.Up();
                 }
                 db = true;
             }
@@ -73,7 +80,7 @@ namespace Pascal {
             if (buff == "")
                 return;
 
-            if (it3 == it2) {
+            if (*it3 == *it2) {
                 /*std::cout << "Depth | " << buff << std::endl;*/
                 list.insertAtDepth(buff, it3.getNode());
                 it3.Down();
