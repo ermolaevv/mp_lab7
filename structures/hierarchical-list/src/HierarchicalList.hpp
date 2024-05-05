@@ -10,7 +10,8 @@ HierarchicalList<TValue>::Node::Node(const reference Value, spNode Next, spNode 
 template<class TValue>
 HierarchicalList<TValue>::Iterator::Iterator(const iterator& it):
     List(it.List),
-    Node(it.Node)
+    Node(it.Node),
+    stack(it.stack)
 {}
 
 template<class TValue>
@@ -25,6 +26,7 @@ typename HierarchicalList<TValue>::Iterator& HierarchicalList<TValue>::Iterator:
     if (this != &other) {
         List = other.List;
         Node = other.Node;
+        stack = other.stack;
     }
     return *this;
 }

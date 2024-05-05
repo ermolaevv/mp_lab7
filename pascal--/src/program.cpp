@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 #include <windows.h>
+#include <codecvt>
+#include <locale>
 
 #include "pascal.h"
 
@@ -14,6 +16,8 @@ enum Mode {
 };
 
 int main(int argc, char* argv[]) {
+    SetConsoleOutputCP(CP_UTF8);
+
     Mode currentMode = TEXT;
     std::string filename, text;
     HierarchicalList<std::string> Hlist;
@@ -47,7 +51,9 @@ int main(int argc, char* argv[]) {
             exit(-1);
         }
 
-        text = std::string{ std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        text = buffer.str();
 
         file.close();
     }
@@ -55,4 +61,12 @@ int main(int argc, char* argv[]) {
     parseToHierarchicalList(text, Hlist);
     parseConst(Hlist, constants);
     parseVar(Hlist, variables);
+
+    try {
+        Execute(Hlist, constants, variables);
+    }
+        catch (std::exception e) {
+        std::cerr << e.what();
+    }
+
 }
