@@ -2,6 +2,7 @@ file(GLOB hdrs "*.h*")
 file(GLOB srcs "*.cpp")
 
 include_directories("../../structures/hierarchical-list/include")
+include_directories("../../past-labs/postfix/include")
 include_directories("../../past-labs/table/table/include")
 include_directories("../../past-labs/table/vector-table/include")
 include_directories("../../past-labs/table/ordered-table/include")

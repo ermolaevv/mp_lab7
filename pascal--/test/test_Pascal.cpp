@@ -4,13 +4,9 @@
 #include <iostream>
 #include <string>
 using namespace std;
-
-TEST(Pascal, Test) {
-
-}
-
 TEST(Pascal, ParseSampleFile) {
     ifstream file("../../../pascal--/samples/sample.pmm");
+
     stringstream buffer;
     buffer << file.rdbuf();
     string content = buffer.str();
@@ -24,7 +20,6 @@ TEST(Pascal, ParseSampleFile) {
 
     Pascal::parseVar(list, variables);
     Pascal::parseConst(list, constants);
-
     // Пример проверки констант
     ASSERT_TRUE(constants.Find("Pi")); // Проверяем, что в таблице констант есть константа "Pi"
     //ASSERT_EQ(constants.Find('Pi'), "3.1415926"); // Проверяем, что значение константы "Pi" равно "3.1415926"

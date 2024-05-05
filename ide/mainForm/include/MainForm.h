@@ -55,7 +55,7 @@ namespace IDE {
     private: System::Windows::Forms::OpenFileDialog^ openFileDialog1;
     private: System::Windows::Forms::SaveFileDialog^ saveFileDialog1;
     private: System::ComponentModel::BackgroundWorker^ backgroundWorker1;
-    private: System::Windows::Forms::RichTextBox^ richTextBox2;
+
 
 
         /// <summary>
@@ -80,7 +80,6 @@ namespace IDE {
             this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
             this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
             this->backgroundWorker1 = (gcnew System::ComponentModel::BackgroundWorker());
-            this->richTextBox2 = (gcnew System::Windows::Forms::RichTextBox());
             this->menuStrip2->SuspendLayout();
             this->SuspendLayout();
             // 
@@ -142,7 +141,7 @@ namespace IDE {
             this->richTextBox1->Location = System::Drawing::Point(0, 36);
             this->richTextBox1->Name = L"richTextBox1";
             this->richTextBox1->ShortcutsEnabled = false;
-            this->richTextBox1->Size = System::Drawing::Size(1898, 814);
+            this->richTextBox1->Size = System::Drawing::Size(1898, 1108);
             this->richTextBox1->TabIndex = 2;
             this->richTextBox1->Text = L"";
             this->richTextBox1->WordWrap = false;
@@ -156,20 +155,11 @@ namespace IDE {
             // 
             this->backgroundWorker1->DoWork += gcnew System::ComponentModel::DoWorkEventHandler(this, &MainForm::RunCode);
             // 
-            // richTextBox2
-            // 
-            this->richTextBox2->Location = System::Drawing::Point(0, 856);
-            this->richTextBox2->Name = L"richTextBox2";
-            this->richTextBox2->Size = System::Drawing::Size(1898, 285);
-            this->richTextBox2->TabIndex = 3;
-            this->richTextBox2->Text = L"";
-            // 
             // MainForm
             // 
             this->AutoScaleDimensions = System::Drawing::SizeF(9, 20);
             this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
             this->ClientSize = System::Drawing::Size(1898, 1144);
-            this->Controls->Add(this->richTextBox2);
             this->Controls->Add(this->richTextBox1);
             this->Controls->Add(this->menuStrip2);
             this->Name = L"MainForm";
@@ -204,9 +194,7 @@ private: String^ RuStr(String^ str) {
 
 private: System::Void SaveCurrentFile() {
     if (isOpened && isNeedSave) {
-        std::ofstream openedFile(context.marshal_as<std::string>(openedFileName));
-        openedFile << context.marshal_as<std::string>(this->richTextBox1->Text);
-        openedFile.close();
+        System::IO::File::WriteAllText(openedFileName, this->richTextBox1->Text);
     }
 }
 
@@ -229,20 +217,8 @@ private: System::Void richTextBox1_TextChanged(System::Object^ sender, System::E
 }
 
 private: System::Void RunCode(System::Object^ sender, System::ComponentModel::DoWorkEventArgs^ e) {
-    this->richTextBox2->Text = "";
-    System::String^ tmpFileName = time(NULL).ToString() + ".txt";
-    std::string command = context.marshal_as<std::string>("..\\bin\\Pascal--.exe /f " + openedFileName + " >> " + tmpFileName + " || pause");
+    std::string command = context.marshal_as<std::string>("\"..\\bin\\Pascal--.exe\" /f " + openedFileName + " && pause");
     system(command.c_str());
-    //WinExec(command.c_str(), HIDE_WINDOW);
-
-    std::ifstream openedFile(context.marshal_as<std::string>(tmpFileName));
-    String^ text = gcnew String(std::string(std::istreambuf_iterator<char>(openedFile), {}).c_str());
-
-    this->richTextBox2->Text = RuStr(text);
-    openedFile.close();
-
-    system(("rm " + context.marshal_as<std::string>(tmpFileName)).c_str());
-    //WinExec(("rm " + context.marshal_as<std::string>(tmpFileName)).c_str(), HIDE_WINDOW);
 }
 };
 }
