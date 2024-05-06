@@ -5,11 +5,11 @@
 #include <sstream>
 #include <regex>
 #include <set>
-
+#include <unordered_set>
 #include "HierarchicalList.h"
 #include "OrderedTable.h"
 #include "keywords.h"
-#include "MyExpression.h"
+#include "../../past-labs/postfix/include/MyExpression.h"
 
 namespace Pascal {
     std::string trim(const std::string& str, const std::string& whitespace = " ")
@@ -411,7 +411,7 @@ namespace Pascal {
             if (!containsKeyword) {
                 if (!std::regex_search(line, std::regex(";"))) {
                     std::cerr << "SYNTAX ERROR | Can't find ';' | " << line << std::endl;
-                    return false;
+                    return 0;
                 }
             }
         }
@@ -437,7 +437,7 @@ namespace Pascal {
             }
             if (openCurlyBraces != 0 || openBrackets != 0) {
                 std::cerr << "SYNTAX ERROR | () or {} haven't pairs |" << line << std::endl;
-                return false;
+                return 0;
             }
         }
 
