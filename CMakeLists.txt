@@ -33,21 +33,5 @@ set_target_properties(gmock_main PROPERTIES FOLDER 3rdparty/${nameBaseProj})
 
 add_subdirectory(past-labs)
 add_subdirectory(structures)
-
-# set(nameMain "Main")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS /ENTRY:${nameMain}")
-
-# file(GLOB hdrs "interface/include/*.h*" "interface/src/*.h*")
-# file(GLOB srcs "*.cpp" "interface/src/*.cpp")
-# file(GLOB resx "interface/include/*.resx")
-
-# add_executable(${PROJECT_NAME} WIN32 ${srcs} ${hdrs} ${resx})
-# set_target_properties(${PROJECT_NAME} PROPERTIES
-#     VS_DOTNET_REFERENCES "System;System.Data;System.Drawing;System.Windows.Forms;System.Xml"
-#     VS_GLOBAL_ROOTNAMESPACE ${PROJECT_NAME}
-#     COMMON_LANGUAGE_RUNTIME ""
-#     CMAKE_VS_TARGET_FRAMEWORK_VERSION "v4.7.2"
-# )
-# target_include_directories(${PROJECT_NAME} PRIVATE
-
-# )
+add_subdirectory(pascal--)
+add_subdirectory(ide)

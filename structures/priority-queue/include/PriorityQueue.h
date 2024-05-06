@@ -87,7 +87,7 @@ public:
     /// <summary>
     /// Очищает очередь.
     /// </summary>
-    void clear() const noexcept;
+    void clear() noexcept;
 
     /// <summary>
     /// Вставить новый элемент в очередь.

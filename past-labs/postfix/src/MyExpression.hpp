@@ -24,7 +24,11 @@ std::vector<std::string> TArithmeticExpression::Parse(const std::string& inp, Ty
 				if (tmp != "")
 					lexems.push_back(tmp);
 				if (c != 32) {
-					if ((c == '-') && (lexems.size() == 0 || priority.count(lexems.back()))) {
+                    if ((c == '/') && lexems.back() == "/") {
+                        lexems.pop_back();
+                        lexems.push_back("//");
+                    }
+					else if ((c == '-') && (lexems.size() == 0 || priority.count(lexems.back()))) {
 						lexems.push_back("~");
 					}
 					else if (priority.count(std::string(1, c))) {
@@ -71,7 +75,7 @@ void TArithmeticExpression::ToPostfix() {
 				st.Pop();
 			}
 		}
-		else if (std::regex_match(item, std::regex("[\\+\\-\\*\\/\\!\\~\\^]|(sin)|(cos)|(tg)|(ctg)"))) {
+		else if (std::regex_match(item, std::regex("[\\+\\-\\*\\/\\!\\~\\^\\%\\=]|(//)|(sin)|(cos)|(tg)|(ctg)"))) {
 			while (!st.IsEmpty()) {
 				stackItem = st.TopView();
 				st.Pop();
@@ -143,7 +147,7 @@ double TArithmeticExpression::Calculate(const std::map<std::string, double>& val
 	TStack<double> st(postfixLexems.size() + values.size());
 	for (std::string lexem : postfixLexems )
 	{	
-		if (std::regex_match(lexem, std::regex("[\\+\\-\\/\\*\\^]"))) {
+		if (std::regex_match(lexem, std::regex("[\\+\\-\\/\\*\\^\\%\\=]|(//)"))) {
 			double res = 0;
 			rightOperand = st.TopView();
 			st.Pop();
@@ -158,6 +162,20 @@ double TArithmeticExpression::Calculate(const std::map<std::string, double>& val
 				if (rightOperand == 0)
 					throw std::logic_error("Divition by zero");
 				res = leftOperand / rightOperand;
+			}
+            if (lexem == "//") {
+                if (rightOperand == 0)
+                    throw std::logic_error("Divition by zero");
+                res = (int)leftOperand / (int)rightOperand;
+            }
+            if (lexem == "%") {
+				if (rightOperand == 0)
+					throw std::logic_error("Divition by zero");
+				res = (int)leftOperand % (int)rightOperand;
+			}
+            if (lexem == "=") {
+                auto round = [](double a, double d = 1000000000000) {return int(a * d + 0.5) / d; };
+				res = round(leftOperand) == round(rightOperand);
 			}
 			st.Push(res);
 		}
@@ -214,7 +232,7 @@ void TArithmeticExpression::IsValidExpression() {
 		}
 		else if (priority.count(lexem)) {
 			// Операторы допустимы
-			if (std::regex_match(lexem, std::regex("[\\+\\-\\/\\*\\^]"))) 
+			if (std::regex_match(lexem, std::regex("[\\+\\-\\/\\*\\^\\=\\%]|(//)"))) 
 				operandBalance--;
 			continue;
 		}

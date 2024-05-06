@@ -14,9 +14,9 @@ begin
     Write("Введите четное целое число: ");
     readln(num2);
     write("Введите вещественное число: ");
-	readln(d);
+    readln(d);
 
-    if (b mod 2 = 0) then
+    if (num2 mod 2 = 0) then
     begin
         res := (num1 - num2 * 5 div 2) / (d * 2);
         write("Результат = ");

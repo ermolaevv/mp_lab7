@@ -6,25 +6,27 @@
 #include <memory>
 #include <vector>
 #include <compare>
+#include <stack>
 
 /// <summary>
-/// Список с пропусками
+/// Иерархический список
 /// </summary>
 template <class TValue>
 class HierarchicalList {
 public:
     class Iterator;
+    class DepthIterator;
 
     // Определения типов для совместимости с STL.
     using value_type = TValue;
     using iterator = Iterator;
+    using depth_iterator = DepthIterator;
     using const_iterator = const Iterator;
     using pointer = value_type*;
     using reference = value_type&;
     using const_reference = const reference;
     using size_type = size_t;
 
-protected:
     struct Node;
     using spNode = std::shared_ptr<Node>;
     using wpNode = std::weak_ptr<Node>;
@@ -35,13 +37,13 @@ protected:
     struct Node {
         value_type Value;
 
-        wpNode Next;
-        wpNode Down;
+        spNode Next;
+        spNode Down;
 
         Node(const reference Value, spNode Next = spNode(), spNode Down = spNode());
     };
 
-
+protected:
     /// <summary>
     /// Длина списка
     /// </summary>
@@ -59,29 +61,31 @@ protected:
     wpNode End;
 public:
     /// <summary>
-    /// Класс-итератор
+    /// Класс-итератор.
     /// </summary>
-    class Iterator{
-		std::shared_ptr<HierarchicalList> List;
-		friend class HierarchicalList<value_type>;
+    class Iterator {
+        HierarchicalList<TValue>& List;
 
-		/// <summary>
-		/// Текущий узел, на который указывает объект итератора
-		/// </summary>
-		spNode Node;
-	public:
-		/// <summary>
-		/// Конструктор копирования
-		/// </summary>
-		/// <param name="it">Другой итератор</param>
-		Iterator(const iterator& it);
+        /// <summary>
+        /// Текущий узел, на который указывает объект итератора.
+        /// </summary>
+        spNode Node;
+        std::stack<spNode> stack;
+    public:
+        friend class HierarchicalList<value_type>;
 
-		/// <summary>
-		/// Конструктор-обыкновенный
-		/// </summary>
-		/// <param name="list">Указатель на список</param>
-		/// <param name="node">Опционально. Указатель на узел, с которого начнётся итерация</param>
-		Iterator(HierarchicalList& list, spNode node = spNode());
+        /// <summary>
+        /// Конструктор копирования.
+        /// </summary>
+        /// <param name="it">Другой итератор</param>
+        Iterator(const iterator& it);
+
+        /// <summary>
+        /// Конструктор-обыкновенный.
+        /// </summary>
+        /// <param name="list">Ссылка на список</param>
+        /// <param name="node">Указатель на узел, с которого начнётся итерация</param>
+        Iterator(HierarchicalList<TValue>& list, spNode node);
 
         /// <summary>
         /// Оператор присваивания.
@@ -91,74 +95,65 @@ public:
         Iterator& operator=(const Iterator& other);
 
         /// <summary>
-        /// При приобразовании к bool, фактически выполняется проверка на конец списка
+        /// При приобразовании к bool, фактически выполняется проверка на конец списка.
         /// </summary>
         operator bool();
 
-		/// <summary>
-		/// Spaceship-оператор, обеспечивающий трехсторонне сравнение
-		/// </summary>
-		/// <param name="other">Другой итератор</param>
-		/// <returns></returns>
-		auto operator<=>(const iterator& other) const;
-
         /// <summary>
-        /// Проверка равенства итераторов
+        /// Spaceship-оператор, обеспечивающий трехсторонне сравнение.
         /// </summary>
-        /// <param name="other">Другой итератор</param>
-        /// <returns>true, если итератеры равны, иначе false</returns>
-        bool operator==(const iterator& other) const;
+        friend auto operator<=>(const iterator& lhs, const iterator& rhs) noexcept
+        {
+            return rhs.Node <=> lhs.Node;
+        }
 
         /// <summary>
-        /// Префиксное смещение итератора вперед
+        /// Префиксное смещение итератора вперед.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator& operator++() const;
+        iterator& operator++();
 
         /// <summary>
-        /// Префиксное смещение итератора назад
+        /// Постфиксное смещение итератора вперед.
         /// </summary>
         /// <returns>Возвращает *this</returns>
-        iterator& operator--() const;
+        iterator operator++(int);
 
         /// <summary>
-        /// Постфиксное смещение итератора вперед
-        /// </summary>
-        /// <returns>Возвращает *this</returns>
-        iterator operator++(int) const;
-
-        /// <summary>
-        /// Постфиксное смещение итератора назад
-        /// </summary>
-        /// <returns>Возвращает *this</returns>
-        iterator operator--(int) const;
-
-        /// <summary>
-        /// Происзвольное смещение итератора вперед
+        /// Происзвольное смещение итератора вперед.
         /// </summary>
         /// <param name="n">Величина смещения</param>
         /// <returns>Возвращает *this</returns>
-        iterator& operator+=(size_type n) const;
+        iterator& operator+=(size_type n);
 
         /// <summary>
-        /// Происзвольное смещение итератора назад
-        /// </summary>
-        /// <param name="n">Величина смещения</param>
-        /// <returns>Возвращает *this</returns>
-        iterator& operator-=(size_type n) const;
-
-        /// <summary>
-        /// Разыменование итератора
+        /// Разыменование итератора.
         /// </summary>
         /// <returns>Ссылка на данные, на которые указывает итератор</returns>
         reference operator*();
 
+        spNode getNode() const { return Node; }
+
         /// <summary>
-        /// Константное разыменование итератора
+        /// Метод для начала обхода по глубине.
         /// </summary>
-        /// <returns>Ссылка на данные, на которые указывает итератор</returns>
-        const_reference operator*() const;
-	};
+        spNode Down() {
+            stack.push(Node);
+            return Node = Node->Down;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        spNode Up() {
+            if (stack.empty()) { return Node; }
+            Node = stack.top();
+            stack.pop();
+            return Node;
+        }
+    };
+
 
     /// <summary>
     /// Конструктор-обыкновенный.
@@ -214,13 +209,15 @@ public:
     /// <summary>
     /// Очищает элементы вектора.
     /// </summary>
-    void clear() const noexcept;
+    void clear() noexcept;
 
     /// <summary>
     /// Вставить новый элемент в список
     /// </summary>
     /// <param name="value">Значение для элемента списка</param>
-    void insert(const reference value) noexcept;
+    void insertAtHorizon(const reference value, spNode parent = spNode()) noexcept;
+
+    void insertAtDepth(const reference value, spNode parent = spNode()) noexcept;
 
     /// <summary>
     /// Удалить элемент по значению.
@@ -235,7 +232,19 @@ public:
     /// <param name="os">Поток вывода</param>
     /// <param name="list">Экземпляр списка</param>
     /// <returns>Поток вывода</returns>
-    friend std::ostream& operator<<(std::ostream& os, HierarchicalList& list);
+    friend std::ostream& operator<<(std::ostream& os, HierarchicalList& list) {
+        typename HierarchicalList<TValue>::spNode current = list.Start;
+        os << "HierarchicalList: ";
+        while (current != nullptr) {
+            os << current->Value << " ";
+            current = current->Next;
+        }
+        return os;
+    };
+protected:
+    spNode findNode(const reference value, spNode node) const noexcept;
+    spNode findPrev(const reference value, spNode node) const noexcept;
+    size_type countByNode(spNode node, size_type offset = 0) const noexcept;
 };
 
 #include "../src/HierarchicalList.hpp"
