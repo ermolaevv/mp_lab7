@@ -17,7 +17,7 @@ begin
 	readln(d);
 
     if (b mod 2 = 0) then
-    begin
+    begink
         res := (num1 - num2 * 5 div 2) / (d * 2);
         write("Результат = ");
         writeln(res);
