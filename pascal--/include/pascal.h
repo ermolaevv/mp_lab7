@@ -5,11 +5,11 @@
 #include <sstream>
 #include <regex>
 #include <set>
-
+#include <unordered_set>
 #include "HierarchicalList.h"
 #include "OrderedTable.h"
 #include "keywords.h"
-#include "MyExpression.h"
+#include "../../past-labs/postfix/include/MyExpression.h"
 
 namespace Pascal {
     std::string trim(const std::string& str, const std::string& whitespace = " ")
@@ -47,16 +47,16 @@ namespace Pascal {
             }
             if (std::regex_search(line, match, blockRegex) && tb == false) {
                 /*std::cout << "Horizont | " << line << std::endl;*/
-                    list.insertAtHorizon(line);
-                    tb = true;
-                    it = list.begin();
-                    db = false;
+                list.insertAtHorizon(line);
+                tb = true;
+                it = list.begin();
+                db = false;
             }
             else if (std::regex_search(line, match, blockRegex) && tb == true) {
                 /*std::cout << "Horizont | " << line << std::endl;*/
-                    list.insertAtHorizon(line, it.getNode());
-                    db = false;
-                    it++;
+                list.insertAtHorizon(line, it.getNode());
+                db = false;
+                it++;
             }
             else {
                 if (db == false) {
@@ -362,6 +362,86 @@ namespace Pascal {
             }
             it++;
         }
+    }
+
+    std::vector<std::string> listtovector(HierarchicalList<std::string>& list) { // Ачё?
+        std::vector<std::string> vector;
+        bool t = false;
+        for (auto it = list.begin(); it != list.end(); ++it) {
+            t = false;
+            vector.push_back(it.getNode()->Value);
+            it.Down();
+            while (it != list.end()) {
+                t = true;
+                vector.push_back(it.getNode()->Value);
+                //vector.push_back(it.getNode()->Value);
+                it++;
+            }
+            //if (t == true)
+            it.Up();
+
+
+        }
+        return vector;
+    }
+
+    bool checkSyntax(const std::vector<std::string>& lines) {
+        std::unordered_set<std::string> pascalKeywords = {
+"begin", "end", "program", "var", "procedure", "function", "if", "then", "else", "while", "do", "const", "var"
+        };
+
+        // Пустые строки. Надо ли оно нам?
+        /*for (const auto& line : lines) {
+            if (line.empty()) {
+                std::cerr << "SYNTAX ERROR | Empty line" << std::endl;
+                return false;
+            }
+        }*/
+
+        // Если нет слов из сета, то проверяем на ";"
+        for (const auto& line : lines) {
+            bool containsKeyword = false;
+            for (const auto& keyword : pascalKeywords) {
+                std::regex keywordPattern("\\b" + keyword + "\\b");
+                if (std::regex_search(line, keywordPattern) || line == "{" || line == "}") {
+                    containsKeyword = true;
+                    break; // Прерываем цикл, если найдено ключевое слово
+                }
+            }
+            if (!containsKeyword) {
+                if (!std::regex_search(line, std::regex(";"))) {
+                    std::cerr << "SYNTAX ERROR | Can't find ';' | " << line << std::endl;
+                    return 0;
+                }
+            }
+        }
+
+        // Подсчёт скобок
+        //
+        int openBrackets = 0;
+        int openCurlyBraces = 0;
+        for (const auto& line : lines) {
+            for (char c : line) {
+                if (c == '{') {
+                    ++openCurlyBraces;
+                }
+                else if (c == '}') {
+                    --openCurlyBraces;
+                }
+                if (c == '(') {
+                    ++openBrackets;
+                }
+                else if (c == ')') {
+                    --openBrackets;
+                }
+            }
+            if (openCurlyBraces != 0 || openBrackets != 0) {
+                std::cerr << "SYNTAX ERROR | () or {} haven't pairs |" << line << std::endl;
+                return 0;
+            }
+        }
+
+        return true;
     }
 
     void Execute(HierarchicalList<std::string>& list, OrderedTable<std::string, std::any>& constants, OrderedTable<std::string, std::any>& variables) {

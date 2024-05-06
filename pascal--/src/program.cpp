@@ -61,12 +61,17 @@ int main(int argc, char* argv[]) {
     parseToHierarchicalList(text, Hlist);
     parseConst(Hlist, constants);
     parseVar(Hlist, variables);
-
-    try {
-        Execute(Hlist, constants, variables);
+    std::vector<std::string> tmp = listtovector(Hlist);
+    bool chk = checkSyntax(tmp);
+    if (chk == false) {
+        return 0;
     }
+    else {
+        try {
+            Execute(Hlist, constants, variables);
+        }
         catch (std::exception e) {
-        std::cerr << e.what();
+            std::cerr << e.what();
+        }
     }
-
 }
