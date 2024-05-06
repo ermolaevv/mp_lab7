@@ -2,18 +2,17 @@
 #define _PASCAL_
 
 #include <any>
+#include <sstream>
+#include <regex>
+#include <set>
 
 #include "HierarchicalList.h"
 #include "OrderedTable.h"
 #include "keywords.h"
-#include <sstream>
-#include <regex>
-#include <set>
-#include <vector>
-#include <unordered_set>
+#include "MyExpression.h"
 
 namespace Pascal {
-        std::string trim(const std::string& str, const std::string& whitespace = " ")
+    std::string trim(const std::string& str, const std::string& whitespace = " ")
     {
         const auto strBegin = str.find_first_not_of(whitespace);
         if (strBegin == std::string::npos)
@@ -139,6 +138,9 @@ namespace Pascal {
                         buff += ch;
                     }
                 }
+                if (buff != "")
+                    insert(list, it2, it3, buff);
+
             }
             it.Up();
 
@@ -440,6 +442,317 @@ namespace Pascal {
         }
 
         return true;
+    }
+
+    void Execute(HierarchicalList<std::string>& list, OrderedTable<std::string, std::any>& constants, OrderedTable<std::string, std::any>& variables) {
+        auto strToLower = [](std::string data) {
+            std::transform(data.begin(), data.end(), data.begin(),
+                [](unsigned char c) { return std::tolower(c); });
+            return data;
+        };
+
+        auto to_str = [](std::any value) -> std::pair<std::string, std::string> {
+            std::string name = value.type().name();
+            std::string str_val = "";
+            std::string type = "None";
+            if (name == "d" || name == "double") {
+                str_val = std::to_string(any_cast<double>(value));
+                type = "double";
+            }
+            if (name == "b" || name == "bool") {
+                str_val = std::to_string(any_cast<bool>(value));
+                type = "bool";
+            }
+            if (name == "i" || name == "int") {
+                str_val = std::to_string(any_cast<int>(value));
+                type = "int";
+            }
+            if (name == "c" || name == "char") {
+                str_val = std::to_string(any_cast<char>(value));
+                type = "char";
+            }
+            if (name == "PKc" || name == "class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >") {
+                str_val = any_cast<std::string>(value);
+                type = "string";
+            }
+
+            return std::make_pair(str_val, type);
+        };
+
+        auto to_print = [to_str](OrderedTable<std::string, std::any>& constants, OrderedTable<std::string, std::any>& variables, std::string arg) -> std::string {
+
+            if (arg.starts_with('"')) {
+                size_t end = arg.find_last_of('"');
+                return arg.substr(1, end - 1);
+            }
+            else {
+                try {
+                    std::any val = *constants.Find(arg);
+                    return to_str(val).first;
+                }
+                catch (std::runtime_error) {
+                    try {
+                        std::any val = *variables.Find(arg);
+                        return to_str(val).first;
+                    }
+                    catch (std::runtime_error) {
+                        return "";
+                    }
+                }
+            }
+        };
+
+        auto get = [to_str](OrderedTable<std::string, std::any>& constants, OrderedTable<std::string, std::any>& variables, std::string arg) -> std::pair<std::string, std::string> {
+            try {
+                std::any val = *constants.Find(arg);
+                return to_str(val);
+            }
+            catch (std::runtime_error) {
+                try {
+                    std::any val = *variables.Find(arg);
+                    return to_str(val);
+                }
+                catch (std::runtime_error) {
+                    if (arg.find_first_not_of("0123456789") == std::string::npos)
+                        return std::make_pair(arg, "int");
+                    else if (arg.find_first_not_of("0123456789,.") == std::string::npos)
+                        return std::make_pair(arg, "double");
+                    return std::make_pair(std::string(), "None");
+                }
+            }
+        };
+
+        auto split = [](std::string s, std::string delimiter) -> std::vector<std::string> {
+            size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+            std::string token;
+            std::vector<std::string> res;
+
+            while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos) {
+                token = s.substr(pos_start, pos_end - pos_start);
+                pos_start = pos_end + delim_len;
+                res.push_back(token);
+            }
+
+            res.push_back(s.substr(pos_start));
+            return res;
+        };
+
+        auto vec_to_str = [](std::vector<std::string>& vec, std::string delim = "") -> std::string {
+            std::ostringstream imploded;
+            std::copy(vec.begin(), vec.end(),
+                std::ostream_iterator<std::string>(imploded, delim.c_str()));
+            return imploded.str();
+        };
+
+        auto calc_expr = [get](OrderedTable<std::string, std::any>& constants, OrderedTable<std::string, std::any>& variables, std::string expr) -> double {
+            expr = std::regex_replace(std::regex_replace(expr, std::regex("div"), "//"), std::regex("mod"), "%");
+            TArithmeticExpression expression(expr);
+            auto operands = expression.GetOperands();
+            std::map<std::string, double> values;
+            for (std::string op : operands) {
+                auto p = get(constants, variables, op);
+
+                if (p.second == "int" || p.second == "double") {
+                    values.insert(make_pair(op, std::stod(p.first)));
+                }
+
+            }
+            return expression.Calculate(values);
+        };
+
+        auto bool_compare = [vec_to_str, calc_expr](OrderedTable<std::string, std::any>& constants, OrderedTable<std::string, std::any>& variables, std::vector<std::string>& arg) -> bool {
+            std::string tmp = vec_to_str(arg, " ");
+            return static_cast<bool>(calc_expr(constants, variables, tmp));
+        };
+
+        bool flag = false;
+        bool skip = false;
+        std::string line;
+        std::smatch match;
+        std::regex walrusOp("\\s*:=\\s*");
+        auto it = list.begin();
+        while (it != list.end() && it.getNode()->Value != "begin") it++;
+        if (it != list.end()) {
+            it.Down();
+            while (it.getNode()) {
+                line = *it;
+                if (std::regex_search(line, match, walrusOp)) {
+                    line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+                    auto splited = split(line, ":=");
+
+                    std::string varName = splited[0];
+                    std::string expr = trim(trim(splited[1], ";"));
+
+                    std::any var = *variables.Find(varName);
+                    std::string type = var.type().name();
+
+                    if (expr.starts_with('"') &&
+                        (type == "class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >" || type == "PKc"))
+                    {
+                        variables.Insert(varName, expr);
+                    }
+                    else if (expr.find_first_not_of("0123456789") == std::string::npos &&
+                        (type == "int" || type == "i")) {
+                        variables.Insert(varName, std::stoi(expr));
+                    }
+                    else if (expr.find_first_not_of("0123456789,.") == std::string::npos &&
+                        (type == "double" || type == "d")) {
+                        variables.Insert(varName, std::stod(expr));
+                    }
+                    else if (type == "bool" || type == "b") {
+                        bool tmp = std::stoi(expr);
+                        variables.Insert(varName, tmp);
+                    }
+                    else if (type == "char" || type == "c") {
+                        char ch;
+                        if (expr.size() > 1)
+                            ch = std::stoi(expr);
+                        else
+                            ch = expr[0];
+                        variables.Insert(varName, ch);
+                    }
+                    else {
+                        
+                        double tmp = calc_expr(constants, variables, expr);
+                        if (type == "int") {
+                            variables.Insert(varName, static_cast<int>(tmp));
+                        }
+                        else if (type == "double") {
+                            variables.Insert(varName, tmp);
+                        }
+                    }
+                }
+                else {
+                    it.Down();
+                    while (it.getNode()) {
+                        std::string word = strToLower(*it);
+                        if (word == "write") {
+                            it += 2;
+                            std::string str = *it;
+                            std::cout << to_print(constants, variables, str);
+                            break;
+                        }
+                        else if (word == "writeln") {
+                            it += 2;
+                            std::string str = *it;
+                            std::cout << to_print(constants, variables, str) << std::endl;
+                            break;
+                        }
+                        else if (word == "readln") {
+                            it += 2;
+                            std::string varName = *it;
+                            std::any val = *variables.Find(varName);
+                            std::string name = val.type().name();
+                            //std::cout << varName << " " << name << std::endl;
+                            if (name == "d" || name == "double") {
+                                double tmp = any_cast<double>(val);
+                                std::cin >> tmp;
+                                val = tmp;
+                            }
+                            if (name == "b" || name == "bool") {
+                                bool tmp = any_cast<bool>(val);
+                                std::cin >> tmp;
+                                val = tmp;
+                            }
+                            if (name == "i" || name == "int") {
+                                int tmp = any_cast<int>(val);
+                                std::cin >> tmp;
+                                val = tmp;
+                            }
+                            if (name == "c" || name == "char") {
+                                char tmp = any_cast<char>(val);
+                                std::cin >> tmp;
+                                val = tmp;
+                            }
+                            if (name == "PKc" || name == "class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >")
+                            {
+                                std::string tmp = any_cast<std::string>(val);
+                                std::cin >> tmp;
+                                val = tmp;
+                            }
+
+                            variables.Insert(varName, val);
+                            break;
+                        }
+                        else if (word == "if") {
+                            it += 2;
+                            std::vector<std::string> expr;
+                            while (*it != ")") expr.push_back(*it++);
+
+                            auto it2 = it;
+                            it2.Up();
+                            if (bool_compare(constants, variables, expr)) {
+                                flag = true;
+                                if (!it2.getNode()->Next) {
+                                    it2.Up();
+                                    it2++;
+                                    it2.Down();
+                                    it2.Down();
+                                    it = it2;
+                                    skip = true;
+                                }
+                            }
+                            else {
+                                flag = false;
+                                if (!it2.getNode()->Next) {
+                                    it2.Up();
+                                    it2 += 2;
+                                    it2.Down();
+                                    it2.Down();
+                                    it = it2;
+                                    skip = true;
+                                }
+                                else {
+                                    it2++;
+                                    it2.Down();
+                                    it = it2;
+                                }
+                            }
+                            break;
+                        }
+                        else if (word == "else") {
+                            auto it2 = it;
+                            it2.Up();
+                            if (flag) {
+                                if (it2.getNode()->Next) {
+                                    it2++;
+                                    it2.Down();
+                                    it = it2;
+                                    skip = true;
+                                }
+                                else {
+                                    it2.Up();
+                                    it2 += 2;
+                                    it2.Down();
+                                    it2.Down();
+                                    it = it2;
+                                }
+                            }
+                            else {
+                                if (!it2.getNode()->Next) {
+                                    it2.Up();
+                                    it2++;
+                                    it2.Down();
+                                    it2.Down();
+                                    it = it2;
+                                    skip = true;
+                                }
+                            }
+                            break;
+                        }
+                        else
+                            it++;
+                    }
+                    it.Up();
+                }
+                if (!skip) {
+                    it++;
+                }
+                else
+                    skip = false;
+            }
+            it.Up();
+        }
     }
 }
 

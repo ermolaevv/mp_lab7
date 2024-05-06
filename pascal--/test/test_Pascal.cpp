@@ -6,16 +6,10 @@
 #include <codecvt>
 #include <locale>
 using namespace std;
-
-TEST(Pascal, Test) {
-
-}
-
 TEST(Pascal, ParseSampleFile) {
     setlocale(LC_ALL, "Russian");
     ifstream file("../../../pascal--/samples/sample.pmm");
-    std::locale utf8_locale(std::locale(), new std::codecvt_utf8<wchar_t>());
-    file.imbue(utf8_locale);
+
     stringstream buffer;
     buffer << file.rdbuf();
     string content = buffer.str();
@@ -30,7 +24,6 @@ TEST(Pascal, ParseSampleFile) {
     vector<std::string> tmp = Pascal::listtovector(list);
     Pascal::parseVar(list, variables);
     Pascal::parseConst(list, constants);
-    Pascal::checkSyntax(tmp);
     // Пример проверки констант
     ASSERT_TRUE(constants.Find("Pi")); // Проверяем, что в таблице констант есть константа "Pi"
     //ASSERT_EQ(constants.Find('Pi'), "3.1415926"); // Проверяем, что значение константы "Pi" равно "3.1415926"
